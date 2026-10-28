@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% load ui %}
+{% block page_title %}{% if request.resolver_match.kwargs.key == 'categories' %}Supprimer une catégorie{% else %}Archiver une fiche{% endif %}{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+  {% if request.resolver_match.kwargs.key == 'categories' %}<h1>Supprimer cette catégorie ?</h1><p><strong>{{ object }}</strong> sera supprimée uniquement si aucun médicament ne l’utilise.</p>{% else %}<h1>Archiver cette fiche ?</h1><p><strong>{{ object }}</strong> deviendra inactive. Les opérations passées et leur historique seront conservés.</p>{% endif %}
+  <form method="post">{% csrf_token %}<div class="actions form-actions"><a class="btn" href="{{ back_url }}">Revenir à la liste</a><button class="btn btn-danger" type="submit">{% if request.resolver_match.kwargs.key == 'categories' %}Supprimer la catégorie{% else %}Archiver la fiche{% endif %}</button></div></form>
+</section>
+{% endblock %}

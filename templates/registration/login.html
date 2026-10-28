@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% load ui %}
+{% block content %}
+<div class="auth-logo">{% icon 'cross' %} PharmaGest</div>
+<section class="panel">
+  <div class="eyebrow">Votre espace pharmacie</div><h1>Connexion</h1><p class="muted">Accédez aux outils autorisés pour votre rôle.</p>
+  <form method="post">{% csrf_token %}{% form_fields form %}<input type="hidden" name="next" value="{{ next }}"><button class="btn btn-primary full-width" type="submit">{% icon 'lock' %} Se connecter</button></form>
+  <p class="auth-help"><a href="{% url 'password_reset' %}">Mot de passe oublié ?</a></p>
+</section>
+{% endblock %}

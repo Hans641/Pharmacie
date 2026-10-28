@@ -1,0 +1,31 @@
+/* Impression HTML : les PDF conservent leur propre mise en page. */
+@page { margin: 14mm; }
+body { background: #fff !important; color: #000 !important; font-size: 11pt; }
+.sidebar, .topbar, .page-footer, .skip-link, .btn, .link-button,
+.filters, .filter-chips, .pagination, .form-actions, .cart-search,
+.shortcuts, .mobile-cart-summary, .no-print, dialog { display: none !important; }
+.workspace { margin: 0; }
+main { padding: 0; max-width: none; min-height: 0; }
+.panel { border: 1px solid #777; box-shadow: none; margin-bottom: 8mm; }
+.cash-grid, .analysis-grid { display: block; }
+.checkout { position: static; }
+.checkout form { display: none; }
+.checkout-total { color: #000; font-size: 24pt; }
+.table-wrap { max-height: none; overflow: visible; }
+table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+thead { display: table-header-group !important; }
+th { position: static; color: #000; background: #eee !important; }
+th, td { padding: 6pt; border-bottom: 1px solid #aaa; color: #000; }
+tr { break-inside: avoid; }
+.badge, .alert, .sale-success { color: #000; background: #fff; border: 1px solid #777; }
+a { color: #000; text-decoration: none; }
+.form-panel { display: none; }
+/* Restaurer la structure tabulaire même pour un support de petite largeur. */
+.responsive-table { display: table; }
+.responsive-table thead { position: static; width: auto; height: auto; overflow: visible; clip: auto; display: table-header-group !important; }
+.responsive-table tbody { display: table-row-group; }
+.responsive-table tfoot { display: table-footer-group; }
+.responsive-table tr { display: table-row; }
+.responsive-table td, .responsive-table tfoot td { display: table-cell; width: auto; padding: 6pt; }
+.responsive-table td::before { display: none; }
+.responsive-table .num { text-align: right; }

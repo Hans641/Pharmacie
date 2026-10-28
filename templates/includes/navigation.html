@@ -1,0 +1,23 @@
+{% load ui %}
+<aside class="sidebar" id="navigation-panel" aria-label="Espace de travail">
+  <a class="brand" href="{% url 'dashboard' %}"><span class="brand-icon">{% icon 'cross' %}</span><span>PharmaGest<small>Gestion de pharmacie</small></span></a>
+  <button class="btn btn-ghost drawer-close" type="button" data-nav-close hidden>{% icon 'close' %} Fermer le menu</button>
+  <nav aria-label="Navigation principale">
+    <p class="nav-label">Au quotidien</p>
+    {% nav_item request 'dashboard' 'Tableau de bord' 'grid' %}
+    {% if perms.pharmacy.view_sale %}{% nav_item request 'sales' 'Ventes et caisse' 'receipt' %}{% endif %}
+    {% if perms.pharmacy.view_medicine %}{% nav_item request 'entity_list' 'Médicaments' 'pill' 'medicaments' %}{% endif %}
+    {% if perms.pharmacy.view_lot %}{% nav_item request 'stock' 'Stocks et lots' 'box' %}{% endif %}
+    {% if perms.pharmacy.view_purchase %}{% nav_item request 'purchases' 'Achats et réceptions' 'truck' %}{% endif %}
+    <p class="nav-label">Référentiels</p>
+    {% if perms.pharmacy.view_category %}{% nav_item request 'entity_list' 'Catégories' 'grid' 'categories' %}{% endif %}
+    {% if perms.pharmacy.view_supplier %}{% nav_item request 'entity_list' 'Fournisseurs' 'truck' 'fournisseurs' %}{% endif %}
+    {% if perms.pharmacy.view_customer %}{% nav_item request 'entity_list' 'Clients' 'users' 'clients' %}{% endif %}
+    <p class="nav-label">Suivi et administration</p>
+    {% nav_item request 'reports' 'Rapports et documents' 'chart' %}
+    {% if perms.pharmacy.view_stockmovement %}{% nav_item request 'movements' 'Mouvements de stock' 'history' %}{% endif %}
+    {% if perms.auth.view_user %}{% nav_item request 'users' 'Utilisateurs et rôles' 'users' %}{% endif %}
+    {% if perms.pharmacy.view_auditlog %}{% nav_item request 'audit' 'Journal d’audit' 'history' %}{% endif %}
+  </nav>
+  <div class="sidebar-footer">{{ pharmacy_name }}<small>Traçabilité des lots et des opérations</small></div>
+</aside>

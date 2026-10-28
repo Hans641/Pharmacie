@@ -1,0 +1,66 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">COMMANDE FOURNISSEUR</div>
+<h1>{{ object }}</h1>
+<p>{{ object.supplier }} · {{ object.created_at|date:'d/m/Y H:i' }} · {{ object.get_status_display }}</p>
+</div>
+<div class="actions">
+<a class="btn" href="{% url 'document' 'purchase' object.pk %}">{% icon 'download' %} Bon de commande PDF</a>{% if perms.pharmacy.receive_purchase %}{% if object.status == 'ordered' or object.status == 'partial' %}<a class="btn btn-primary" href="{% url 'purchase_receive' object.pk %}">Réceptionner</a>{% endif %}{% endif %}</div>
+</div>
+<section class="panel">
+<div class="table-wrap">
+<table class="responsive-table" role="table">
+<thead>
+<tr>
+<th scope="col">Médicament</th>
+<th scope="col">Commandé</th>
+<th scope="col">Reçu</th>
+<th scope="col">Restant</th>
+<th scope="col">P.U.</th>
+<th scope="col">Total</th>
+<th scope="col">Actions</th>
+</tr>
+</thead>
+<tbody>{% for l in object.lines.all %}<tr>
+<td data-label="Médicament">{{ l.medicine }}</td>
+<td data-label="Commandé" data-numeric="true">{{ l.quantity }}</td>
+<td data-label="Reçu" data-numeric="true">{{ l.received }}</td>
+<td data-label="Restant" data-numeric="true">{{ l.remaining }}</td>
+<td data-label="P.U." data-numeric="true">{{ l.unit_price|money }}</td>
+<td data-label="Total" data-numeric="true">{{ l.subtotal|money }}</td>
+<td data-label="Actions">{% if object.status == 'draft' and perms.pharmacy.change_purchase %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove">
+<input type="hidden" name="line" value="{{ l.pk }}">
+<button class="link-button danger-text" type="submit">Retirer</button>
+</form>{% endif %}</td>
+</tr>{% empty %}<tr>
+<td class="empty" colspan="7">Ajoutez les médicaments à commander.</td>
+</tr>{% endfor %}</tbody>
+<tfoot>
+<tr>
+<td colspan="5">Total commandé</td>
+<td colspan="2" class="num">{{ object.total|money }}</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</section>{% if object.status == 'draft' and perms.pharmacy.change_purchase %}<section class="panel form-panel">
+<h2>Ajouter une ligne</h2>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="add">{% form_fields form %}<button class="btn" type="submit">{% icon 'plus' %} Ajouter à la commande</button>
+</form>
+</section>
+<form method="post" class="actions confirm-bar">{% csrf_token %}<input type="hidden" name="action" value="order">
+<label>
+<input type="checkbox" required> Je confirme l’envoi de cette commande</label>
+<button class="btn btn-primary" type="submit">Valider la commande</button>
+</form>{% endif %}{% if perms.pharmacy.change_purchase %}{% if object.status == 'draft' or object.status == 'ordered' %}<form method="post" class="confirm-bar" data-confirm="Confirmer l’annulation de cette commande ?">{% csrf_token %}<input type="hidden" name="action" value="cancel">
+<label>
+<input type="checkbox" required> Confirmer l’annulation</label>
+<button class="btn btn-danger" type="submit">Annuler la commande</button>
+</form>{% endif %}{% endif %}<section class="panel">
+<div class="panel-heading">
+<h2>Réceptions enregistrées</h2>
+</div>{% for r in object.receipts.all %}<div class="list-row">
+<span>{{ r }} · {{ r.created_at|date:'d/m/Y H:i' }}</span>
+<a href="{% url 'document' 'receipt' r.pk %}">Bon de réception PDF {% icon 'download' %}</a>
+</div>{% empty %}<p class="empty">Aucune réception. Le stock n’a pas été modifié.</p>{% endfor %}</section>
+{% endblock %}

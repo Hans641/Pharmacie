@@ -1,0 +1,3 @@
+{% load ui %}{% for message in messages %}
+<div class="alert {{ message.tags }}" {% if 'error' in message.tags %}role="alert"{% else %}role="status"{% endif %}>{% if 'error' in message.tags %}{% icon 'warning' %}{% else %}{% icon 'check' %}{% endif %}<div>{{ message }}</div></div>
+{% endfor %}

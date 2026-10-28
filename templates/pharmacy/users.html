@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">ADMINISTRATION</div>
+<h1>Utilisateurs & rôles</h1>
+<p>Les permissions se cumulent lorsqu’un compte possède plusieurs rôles.</p>
+</div>{% if perms.auth.add_user %}<a class="btn btn-primary" href="{% url 'user_create' %}">{% icon 'plus' %} Créer un compte</a>{% endif %}</div>
+<section class="panel">
+<div class="table-wrap">
+<table class="responsive-table" role="table">
+<thead>
+<tr>
+<th scope="col">Identifiant</th>
+<th scope="col">Nom</th>
+<th scope="col">Rôles</th>
+<th scope="col">État</th>
+<th scope="col">Actions</th>
+</tr>
+</thead>
+<tbody>{% for u in page_obj %}<tr>
+<td data-label="Identifiant">
+<strong>{{ u.username }}</strong>
+</td>
+<td data-label="Nom">{{ u.get_full_name }}</td>
+<td data-label="Rôles">{% for g in u.groups.all %}<span class="badge">{{ g }}</span> {% empty %}{% if u.is_superuser %}Superadministrateur{% else %}Aucun rôle{% endif %}{% endfor %}</td>
+<td data-label="État">{% if u.is_active %}Actif{% else %}Inactif{% endif %}</td>
+<td data-label="Actions">{% if perms.auth.change_user %}{% if not u.is_superuser or user.is_superuser %}<a href="{% url 'user_edit' u.pk %}">Modifier</a>{% endif %}{% endif %}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% include 'pharmacy/pagination.html' %}</section>
+{% endblock %}

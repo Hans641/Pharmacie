@@ -1,0 +1,33 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">TRAÇABILITÉ</div>
+<h1>Journal d’audit</h1>
+</div>
+</div>
+<section class="panel">
+<form class="filters" method="get" data-live-search>
+<input class="form-control search" name="q" value="{{ request.GET.q }}" placeholder="Action ou référence" aria-label="Recherche">
+<button class="btn" type="submit">Rechercher</button>
+</form>
+<div data-list-results>{% filter_chips %}<div class="table-wrap">
+<table class="responsive-table" role="table">
+<thead>
+<tr>
+<th scope="col">Date</th>
+<th scope="col">Auteur</th>
+<th scope="col">Action</th>
+<th scope="col">Objet</th>
+</tr>
+</thead>
+<tbody>{% for a in page_obj %}<tr>
+<td data-label="Date">{{ a.created_at|date:'d/m/Y H:i:s' }}</td>
+<td data-label="Auteur">{{ a.author }}</td>
+<td data-label="Action">{{ a.action }}</td>
+<td data-label="Objet">{{ a.target }}</td>
+</tr>{% empty %}<tr>
+<td colspan="4" class="empty">Aucune opération.</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% include 'pharmacy/pagination.html' %}</div>
+</section>
+{% endblock %}

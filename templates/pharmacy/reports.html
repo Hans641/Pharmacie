@@ -1,0 +1,41 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">PILOTAGE</div>
+<h1>Rapports & documents</h1>
+<p>Exportez les données accessibles à votre rôle au format PDF.</p>
+</div>
+</div>
+<section class="panel form-panel">
+<h2>Période d’analyse</h2>
+<form class="date-filters">
+<label>Du <input type="date" name="start" value="{{ start|date:'Y-m-d' }}">
+</label>
+<label>au <input type="date" name="end" value="{{ end|date:'Y-m-d' }}">
+</label>
+<button class="btn" type="submit">Appliquer</button>
+</form>
+</section>
+<div class="report-grid">{% if perms.pharmacy.view_sale %}<a class="panel report-card" href="{% url 'report_pdf' 'sales' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}">
+<span class="metric-icon blue">{% icon 'chart' %}</span>
+<h2>Rapport des ventes</h2>
+<p>Ventes validées, chiffre d’affaires et remboursements.</p>
+<strong>Télécharger le PDF {% icon 'download' %}</strong>
+</a>{% endif %}{% if perms.pharmacy.view_purchase %}<a class="panel report-card" href="{% url 'report_pdf' 'purchases' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}">
+<span class="metric-icon green">{% icon 'truck' %}</span>
+<h2>Rapport des achats</h2>
+<p>Montants des marchandises effectivement réceptionnées.</p>
+<strong>Télécharger le PDF {% icon 'download' %}</strong>
+</a>{% endif %}{% if perms.pharmacy.view_lot %}<a class="panel report-card" href="{% url 'report_pdf' 'stock' %}">
+<span class="metric-icon amber">{% icon 'box' %}</span>
+<h2>État du stock</h2>
+<p>Situation actuelle par médicament, lot et date de péremption.</p>
+<strong>Télécharger le PDF {% icon 'download' %}</strong>
+</a>
+<a class="panel report-card" href="{% url 'report_pdf' 'expiry' %}">
+<span class="metric-icon rose">{% icon 'clock' %}</span>
+<h2>Suivi des péremptions</h2>
+<p>Lots périmés ou à échéance dans les 90 prochains jours.</p>
+<strong>Télécharger le PDF {% icon 'download' %}</strong>
+</a>{% endif %}</div>
+<p class="muted">Les reçus, factures et bons de commande sont disponibles sur la fiche de chaque opération.</p>
+{% endblock %}

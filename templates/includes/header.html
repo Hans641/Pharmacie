@@ -1,0 +1,6 @@
+{% load ui %}
+<header class="topbar">
+  <button class="btn btn-ghost drawer-toggle" type="button" data-nav-open aria-controls="navigation-panel" aria-expanded="false" hidden>{% icon 'menu' %} Menu</button>
+  <nav class="breadcrumbs" aria-label="Fil d’Ariane"><ol><li><a href="{% url 'dashboard' %}">Accueil</a></li>{% if key %}<li><a href="{% url 'entity_list' key %}">{{ key|capfirst }}</a></li>{% endif %}<li aria-current="page">{% if request.resolver_match.url_name == 'entity_delete' %}{% if request.resolver_match.kwargs.key == 'categories' %}Supprimer une catégorie{% else %}Archiver une fiche{% endif %}{% else %}{{ title|default:'Mon espace' }}{% endif %}</li></ol></nav>
+  <details class="account-menu"><summary><span class="avatar" aria-hidden="true">{{ user.username|first|upper }}</span><span>{{ user.get_full_name|default:user.username }}<small>{% if user.is_superuser %}Administrateur{% else %}{{ user.groups.first|default:'Compte utilisateur' }}{% endif %}</small></span></summary><div class="account-actions"><a href="{% url 'password_change' %}">Modifier mon mot de passe</a><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit">Se déconnecter</button></form></div></details>
+</header>

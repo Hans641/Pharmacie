@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% load ui %}
+{% block content %}{% operation_ui as operation %}
+<div class="page-heading"><div><div class="eyebrow">Gestion de pharmacie</div><h1>{{ title }}</h1><p>{{ help|default:operation.help }}</p></div></div>
+<section class="panel form-panel">
+  {% if request.resolver_match.url_name == 'inventory' %}<p class="operation-context">Stock enregistré avant comptage : <strong>{{ form.initial.counted }} unités</strong>. {% if form.initial.blocked %}Ce lot est actuellement bloqué.{% endif %} La différence et le motif seront conservés dans l’historique.</p>{% elif request.resolver_match.url_name == 'sale_return' %}<p class="operation-context">Une remise en stock est possible uniquement après contrôle de l’éligibilité du produit. Le remboursement est exécuté en dehors de PharmaGest.</p>{% endif %}
+  {% if request.resolver_match.url_name == 'purchase_receive' %}
+  <div class="operation-context"><h2>Quantités restant à recevoir</h2>{% for line in form.fields.line.queryset %}<p><strong>{{ line.medicine }}</strong> · commandé : {{ line.quantity }} · déjà reçu : {{ line.received }} · restant : {{ line.remaining }}</p>{% empty %}<p>Cette commande n’a plus de quantité à réceptionner.</p>{% endfor %}</div>
+  {% elif request.resolver_match.url_name == 'sale_return' %}
+  <div class="operation-context"><h2>Articles de la vente d’origine</h2>{% for line in form.fields.line.queryset %}<p><strong>{{ line }}</strong> · vendu : {{ line.quantity }} · déjà retourné : {{ line.returned }} · encore retournable : {{ line.quantity|subtract:line.returned }} · prix : {{ line.unit_price|money }}</p>{% endfor %}</div>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data"{% if request.resolver_match.url_name == 'inventory' %} data-confirm="Confirmer ce comptage physique et le statut de blocage du lot ?"{% elif request.resolver_match.url_name == 'sale_return' %} data-confirm="Confirmer le retour, le remboursement déjà effectué et l’éventuelle remise en stock ?"{% endif %}>
+    {% csrf_token %}{% form_fields form %}
+    <div class="actions form-actions"><button class="btn btn-primary" type="submit">{% icon 'check' %} {{ operation.label }}</button><a class="btn" href="{{ back_url|default:'/' }}">Annuler</a></div>
+  </form>
+</section>
+{% endblock %}

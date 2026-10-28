@@ -1,0 +1,69 @@
+{% extends 'base.html' %}{% load ui %}
+{% block content %}
+<div class="page-heading">
+  <div><div class="eyebrow">Caisse · {{ object.get_status_display }}</div><h1>{{ object }}</h1><p>{{ object.customer|default:'Client comptoir' }} · {{ object.author }} · {{ object.created_at|date:'d/m/Y H:i' }}</p></div>
+  <a class="btn" href="{% url 'sales' %}">Historique des ventes</a>
+</div>
+{% if object.status == 'validated' %}
+<section class="sale-success" aria-labelledby="sale-success-title">
+  <h2 id="sale-success-title">{% icon 'check' %} Vente encaissée</h2>
+  <p>{{ object }} · {{ object.total|money }} · {{ object.payment.get_method_display }} · {{ object.validated_at|date:'d/m/Y H:i' }}</p>
+  <div class="actions"><a class="btn btn-primary" href="{% url 'document' 'sale' object.pk %}">{% icon 'download' %} Télécharger le reçu PDF</a><button class="btn" type="button" data-print hidden>Imprimer cette vente</button>{% if perms.pharmacy.add_sale %}<a class="btn" href="{% url 'sale_create' %}">{% icon 'plus' %} Nouvelle vente</a>{% endif %}<a class="btn btn-ghost" href="{% url 'document' 'invoice' object.pk %}">Facture PDF</a>{% if perms.pharmacy.return_sale %}<a class="btn btn-ghost" href="{% url 'sale_return' object.pk %}">Enregistrer un retour</a>{% endif %}</div>
+</section>
+{% endif %}
+<div class="cash-grid">
+  <div>
+    {% if object.status == 'draft' and perms.pharmacy.change_sale %}
+    <section class="panel cart-search" aria-labelledby="cart-search-title">
+      <h2 id="cart-search-title">Rechercher ou scanner</h2>
+      <form method="get" class="filters" data-cash-search>
+        <label class="visually-hidden" for="cash-search">Nom ou code-barres</label>
+        <input id="cash-search" class="form-control search" name="q" value="{{ search }}" placeholder="Nom du médicament ou code-barres" autocomplete="off" autofocus data-cash-focus>
+        <button class="btn" type="submit">{% icon 'search' %} Rechercher</button>
+        {% if search %}<a class="btn btn-ghost" href="{% url 'sale_detail' object.pk %}">Tous les produits</a>{% endif %}
+      </form>
+      <form method="post" data-cart-add>{% csrf_token %}<input type="hidden" name="action" value="add">
+        {% include 'includes/form_errors.html' with form=cart %}
+        <div class="form-grid">{% include 'includes/field.html' with field=cart.medicine %}{% include 'includes/field.html' with field=cart.quantity %}</div>
+        <div class="lot-hint" data-lot-hint role="status">Lot automatique : FEFO, le lot délivrable qui expire en premier. Le stock est revérifié à l’encaissement.</div>
+        <details class="advanced-options"{% if cart.lot.errors %} open{% endif %}><summary>Choisir un lot spécifique</summary><div>{% include 'includes/field.html' with field=cart.lot %}<p class="helptext">Laissez le lot vide pour la sélection automatique FEFO.</p></div></details>
+        <button class="btn btn-primary" type="submit">{% icon 'plus' %} Ajouter au panier</button>
+      </form>
+      <template id="lot-data">{% for lot in cart.fields.lot.queryset %}<span data-id="{{ lot.pk }}" data-medicine="{{ lot.medicine_id }}" data-state="{{ lot.expires_on|expiry_state }}" data-number="{{ lot.number }}" data-expiry="{{ lot.expires_on|date:'d/m/Y' }}" data-quantity="{{ lot.quantity }}"></span>{% endfor %}</template>
+      <p class="shortcuts no-print"><kbd>F2</kbd> Recherche · <kbd>Entrée</kbd> Rechercher / ajouter · <kbd>F4</kbd> Aller à l’encaissement. La validation reste explicite.</p>
+    </section>
+    {% endif %}
+    <section class="panel" id="cart" aria-labelledby="cart-title">
+      <div class="panel-heading"><h2 id="cart-title">Panier de vente</h2><span class="badge">{{ object.lines.count }} ligne{{ object.lines.count|pluralize }}</span></div>
+      <div class="table-wrap"><table class="responsive-table" role="table"><caption class="visually-hidden">Médicaments et lots réellement délivrés</caption><thead><tr><th scope="col">Médicament / lot</th><th scope="col" class="num">Quantité</th><th scope="col" class="num">Prix unitaire</th><th scope="col" class="num">Total</th><th scope="col">Actions</th></tr></thead><tbody>
+      {% for l in object.lines.all %}<tr data-cart-lot="{{ l.lot_id }}" data-cart-quantity="{{ l.quantity }}">
+        <td data-label="Médicament"><div><strong>{{ l.lot.medicine }}</strong><small>Lot {{ l.lot.number }} · {{ l.lot.expires_on|date:'d/m/Y' }}</small>{% if l.lot.expires_on|expiry_state == 'soon' %}<span class="badge warning">{% icon 'clock' %} Péremption sous 90 jours</span>{% elif l.lot.expires_on|expiry_state == 'expired' %}<span class="badge danger">{% icon 'warning' %} Lot périmé</span>{% endif %}{% if l.lot.blocked %}<span class="badge danger">{% icon 'lock' %} Lot bloqué</span>{% endif %}{% if l.returned %}<small>{{ l.returned }} unité(s) retournée(s)</small>{% endif %}</div></td>
+        <td data-label="Quantité" class="num">{{ l.quantity }}</td><td data-label="Prix unitaire" class="num">{{ l.unit_price|money }}</td><td data-label="Total" class="num">{{ l.subtotal|money }}</td>
+        <td data-label="Actions">{% if object.status == 'draft' and perms.pharmacy.change_sale %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="line" value="{{ l.pk }}"><button class="btn btn-ghost danger-text" aria-label="Retirer {{ l.lot.medicine }}">Retirer</button></form>{% endif %}</td>
+      </tr>{% empty %}<tr><td class="empty" colspan="5"><strong>Le panier est vide.</strong><p>Recherchez un médicament pour ajouter le premier article.</p></td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="total-bar"><span>{% if object.status == 'validated' %}Total de la vente{% else %}Total à encaisser{% endif %}</span><strong>{{ object.total|money }}</strong></div>
+    </section>
+  </div>
+  <aside class="panel checkout" id="checkout" aria-labelledby="checkout-title" tabindex="-1">
+    <h2 id="checkout-title">{% if object.status == 'validated' %}Récapitulatif{% else %}Encaissement{% endif %}</h2>
+    <div class="checkout-total">{{ object.total|money }}</div>
+    {% if object.status == 'draft' and perms.pharmacy.validate_sale %}
+    <form method="post" data-checkout data-total="{{ object.total|stringformat:'.2f' }}">{% csrf_token %}<input type="hidden" name="action" value="validate">
+      {% include 'includes/form_errors.html' with form=checkout %}
+      <fieldset class="payment-choices" id="id_method" tabindex="-1"><legend>Mode de paiement</legend>
+      {% for value,label in checkout.fields.method.choices %}{% if value == 'cash' or perms.pharmacy.verify_payment %}<label class="payment-choice"><input type="radio" name="method" value="{{ value }}" required{% if checkout.method.value == value or not checkout.method.value and value == 'cash' %} checked{% endif %}>{{ label }}</label>{% endif %}{% endfor %}
+      </fieldset>
+      {% if checkout.method.errors %}<div class="field-errors">{{ checkout.method.errors }}</div>{% endif %}
+      <div data-cash-tools hidden><label for="cash-received">Montant reçu en espèces (Ar)</label><input class="form-control" id="cash-received" type="text" inputmode="decimal" autocomplete="off" aria-describedby="cash-received-help"><p id="cash-received-help" class="helptext">Aide au calcul uniquement. Aucun montant reçu n’est enregistré.</p><div class="cash-change"><span>Monnaie à rendre</span><output id="cash-change" for="cash-received">—</output></div></div>
+      {% if perms.pharmacy.verify_payment %}<div data-electronic-tools>{% include 'includes/field.html' with field=checkout.reference %}{% include 'includes/field.html' with field=checkout.verified %}<p class="helptext">Vérifiez la transaction auprès du prestataire avant de confirmer.</p></div>{% endif %}
+      {% include 'includes/field.html' with field=checkout.prescription_checked %}
+      {% include 'includes/field.html' with field=checkout.confirm %}
+      <button class="btn btn-primary full-width" type="submit"{% if not object.lines.exists %} disabled{% endif %}>{% icon 'check' %} Encaisser {{ object.total|money }}</button>
+    </form>
+    {% elif object.status == 'validated' %}<span class="badge success">{% icon 'check' %} Paiement confirmé</span><p>{{ object.payment.get_method_display }} · {{ object.validated_at|date:'d/m/Y H:i' }}</p><p>Remboursements cumulés : <strong>{{ object.refunded|money }}</strong></p>{% else %}<p class="muted">L’encaissement nécessite un utilisateur habilité.</p>{% endif %}
+  </aside>
+</div>
+{% if object.status == 'draft' %}<div class="mobile-cart-summary"><a href="#cart">Panier · {{ object.lines.count }} ligne{{ object.lines.count|pluralize }}</a><div><strong>{{ object.total|money }}</strong><small><a href="#checkout">Voir l’encaissement</a></small></div></div>{% endif %}
+{% if object.returns.exists %}<section class="panel"><div class="panel-heading"><h2>Retours et remboursements</h2></div>{% for r in object.returns.all %}<div class="list-row"><div><strong>{{ r.line }} · {{ r.quantity }} unité(s)</strong><small>{{ r.reason }} · {{ r.author }} · {{ r.refund_reference }} · {% if r.restock %}Remis en stock{% else %}Sans remise en stock{% endif %}</small></div><span class="money">{{ r.amount|money }}</span></div>{% endfor %}</section>{% endif %}
+{% endblock %}

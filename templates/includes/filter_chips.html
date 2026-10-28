@@ -1,0 +1,1 @@
+{% load ui %}{% if chips %}<nav class="filter-chips" aria-label="Filtres actifs">{% for chip in chips %}<a class="filter-chip" href="{{ chip.url }}" aria-label="Retirer le filtre {{ chip.label }} : {{ chip.value }}">{{ chip.label }} : {{ chip.value }} {% icon 'close' %}</a>{% endfor %}<a href="{{ reset_url }}" class="btn btn-ghost">Tout effacer</a></nav>{% endif %}

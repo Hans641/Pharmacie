@@ -1,0 +1,28 @@
+{% load static ui %}<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block page_title %}{{ title|default:'Bienvenue' }}{% endblock %} · PharmaGest</title>
+  <link rel="stylesheet" href="{% static 'css/vendor/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/print.css' %}" media="print">
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Aller au contenu</a>
+  {% include 'includes/icons.svg' %}
+  {% if user.is_authenticated %}{% include 'includes/navigation.html' %}{% endif %}
+  <div class="{% if user.is_authenticated %}workspace{% else %}auth-workspace{% endif %}" id="workspace">
+    {% if user.is_authenticated %}{% include 'includes/header.html' %}{% endif %}
+    <main id="main-content" tabindex="-1">
+      {% include 'includes/messages.html' %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="page-footer"><span>PharmaGest · {{ pharmacy_name }}</span><span>Montants en ariary (Ar)</span></footer>
+  </div>
+  {% include 'includes/confirm_dialog.html' %}
+  <p class="visually-hidden" role="status" id="interaction-status"></p>
+</body>
+</html>

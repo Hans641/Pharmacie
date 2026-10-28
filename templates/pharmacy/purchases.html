@@ -1,0 +1,39 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">APPROVISIONNEMENT</div>
+<h1>Achats & réceptions</h1>
+<p>Une commande augmente le stock uniquement à sa réception effective.</p>
+</div>{% if perms.pharmacy.add_purchase %}<a class="btn btn-primary" href="{% url 'purchase_create' %}">{% icon 'plus' %} Nouvelle commande</a>{% endif %}</div>
+<section class="panel">
+<form class="filters" method="get" data-live-search>
+<input class="form-control search" name="q" value="{{ request.GET.q }}" placeholder="Rechercher un fournisseur" aria-label="Recherche">
+<select class="form-control" name="status" aria-label="Statut">
+<option value="">Tous les statuts</option>{% for value,label in statuses %}<option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<button class="btn" type="submit">Filtrer</button>
+</form>
+<div data-list-results>{% filter_chips %}<div class="table-wrap">
+<table class="responsive-table" role="table">
+<thead>
+<tr>
+<th scope="col">Référence</th>
+<th scope="col">Fournisseur</th>
+<th scope="col">Date</th>
+<th scope="col">Statut</th>
+<th scope="col">Total commandé</th>
+</tr>
+</thead>
+<tbody>{% for p in page_obj %}<tr>
+<td data-label="Référence">
+<a href="{% url 'purchase_detail' p.pk %}">{{ p }}</a>
+</td>
+<td data-label="Fournisseur">{{ p.supplier }}</td>
+<td data-label="Date">{{ p.created_at|date:'d/m/Y H:i' }}</td>
+<td data-label="Statut">{% include 'includes/document_status.html' with object=p %}</td>
+<td data-label="Total commandé" data-numeric="true">{{ p.total|money }}</td>
+</tr>{% empty %}<tr>
+<td colspan="5" class="empty">Aucune commande.</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% include 'pharmacy/pagination.html' %}</div>
+</section>
+{% endblock %}

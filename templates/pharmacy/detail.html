@@ -1,0 +1,31 @@
+{% extends 'base.html' %}{% load ui %}{% block content %}<div class="page-heading">
+<div>
+<div class="eyebrow">FICHE DÉTAILLÉE</div>
+<h1>{{ title }}</h1>
+</div>
+<a class="btn" href="{% url 'entity_list' key %}">Retour à la liste</a>
+</div>
+<section class="panel detail-panel">{% if object.photo %}<img class="detail-photo" src="{{ object.photo.url }}" alt="Photo de {{ object }}">{% endif %}<dl>{% for label,value in fields %}<div>
+<dt>{{ label|capfirst }}</dt>
+<dd>{{ value|display_value }}</dd>
+</div>{% endfor %}</dl>
+</section>{% if lots != None %}<section class="panel">
+<div class="panel-heading">
+<h2>Lots</h2>
+</div>{% for l in lots %}<div class="list-row">
+<span>Lot {{ l.number }} · {{ l.expires_on|date:'d/m/Y' }}</span>
+<div><strong>{{ l.quantity }} unités</strong>{% include 'includes/lot_status.html' with lot=l %}</div>
+</div>{% empty %}<p class="empty">Aucun lot.</p>{% endfor %}</section>{% endif %}{% if purchases != None %}<section class="panel">
+<div class="panel-heading">
+<h2>Historique des achats</h2>
+</div>{% for p in purchases %}<div class="list-row">
+<a href="{% url 'purchase_detail' p.pk %}">{{ p }} · {{ p.get_status_display }}</a>
+<span>{{ p.total|money }}</span>
+</div>{% empty %}<p class="empty">Aucun achat.</p>{% endfor %}</section>{% endif %}{% if sales != None %}<section class="panel">
+<div class="panel-heading">
+<h2>Historique des ventes</h2>
+</div>{% for s in sales %}<div class="list-row">
+<a href="{% url 'sale_detail' s.pk %}">{{ s }} · {{ s.get_status_display }}</a>
+<span>{{ s.total|money }}</span>
+</div>{% empty %}<p class="empty">Aucune vente.</p>{% endfor %}</section>{% endif %}
+{% endblock %}
