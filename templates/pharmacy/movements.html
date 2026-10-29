@@ -10,7 +10,8 @@
 <input class="form-control search" name="q" value="{{ request.GET.q }}" placeholder="Médicament ou lot" aria-label="Recherche">
 <button class="btn" type="submit">Rechercher</button>
 </form>
-<div data-list-results>{% filter_chips %}<div class="table-wrap">
+{% include 'includes/search_loading.html' %}
+  <div data-list-results>{% filter_chips %}<div class="table-wrap">
 <table class="responsive-table" role="table">
 <thead>
 <tr>

@@ -1,5 +1,5 @@
 {% load ui %}
-<div class="field field--{{ field|widget_kind }}{% if field.errors %} has-error{% endif %}">
+<div data-field-name="{{ field.html_name }}" data-field-label="{{ field.label }}" class="field field--{{ field|widget_kind }}{% if field.errors %} has-error{% endif %}">
   {% if field|widget_kind == 'checkbox' %}
     <label class="check-label" for="{{ field.id_for_label }}">{{ field|accessible_widget }}<span>{{ field.label }}{% if field.field.required %}<span class="required-text"> · obligatoire</span>{% endif %}</span></label>
   {% elif field|widget_kind == 'choices' %}
@@ -8,6 +8,7 @@
     <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-text"> · obligatoire</span>{% endif %}</label>
     <div class="input-wrap">{{ field|accessible_widget }}{% if field|widget_kind == 'password' %}<button class="btn btn-ghost password-toggle" type="button" data-password-toggle="{{ field.id_for_label }}" aria-controls="{{ field.id_for_label }}" aria-pressed="false" hidden>Afficher</button>{% endif %}</div>
   {% endif %}
-  {% if field.help_text %}<div class="helptext" id="{{ field.auto_id }}_help">{{ field.help_text|safe }}</div>{% endif %}
-  {% if field.errors %}<div id="{{ field.auto_id }}_errors" class="field-errors">{% for error in field.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+  {% if field.help_text or field|field_hint %}<div class="helptext" id="{{ field.auto_id }}_help">{% if field.help_text %}{{ field.help_text|safe }}{% else %}{{ field|field_hint }}{% endif %}</div>{% endif %}
+  <p id="{{ field.auto_id }}_feedback" class="field-feedback" data-field-feedback aria-live="polite" aria-atomic="true"></p>
+  {% if field.errors %}<div id="{{ field.auto_id }}_errors" class="field-errors" data-server-errors><strong class="server-error-label">Au dernier envoi</strong>{% for error in field.errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
 </div>

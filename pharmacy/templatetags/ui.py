@@ -3,6 +3,7 @@ from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
 from django import template
 from django.forms import CheckboxInput, CheckboxSelectMultiple, PasswordInput, Textarea
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.utils.html import format_html
 
@@ -40,7 +41,8 @@ def accessible_widget(field):
     attrs = {'class': 'form-control'}
     if isinstance(field.field.widget, CheckboxInput): attrs['class'] = 'form-check-input'
     descriptions = []
-    if field.help_text: descriptions.append(field.auto_id + '_help')
+    if field.help_text or field_hint(field): descriptions.append(field.auto_id + '_help')
+    descriptions.append(field.auto_id + '_feedback')
     if field.errors:
         descriptions.append(field.auto_id + '_errors')
         attrs['aria-invalid'] = 'true'
@@ -49,10 +51,23 @@ def accessible_widget(field):
     if field.name in ['password', 'old_password']: attrs['autocomplete'] = 'current-password'
     if field.name in ['password1','password2','new_password1','new_password2']: attrs['autocomplete'] = 'new-password'
     if field.name == 'quantity': attrs.update(inputmode='numeric', **{'data-quantity': ''})
+    # Projeter les limites du modèle vers le widget, sans changer sa validation.
+    model = getattr(getattr(field.form, '_meta', None), 'model', None)
+    if getattr(field.field.widget, 'input_type', '') == 'number':
+        attrs['inputmode'] = 'decimal' if getattr(field.field, 'decimal_places', None) is not None else 'numeric'
+    if model and getattr(field.field.widget, 'input_type', '') == 'number':
+        for validator in model._meta.get_field(field.name).validators:
+            if isinstance(validator, (MinValueValidator, MaxValueValidator)) and not callable(validator.limit_value):
+                limit = validator.limit_value
+                attrs['min' if isinstance(validator, MinValueValidator) else 'max'] = format(limit, 'f') if isinstance(limit, Decimal) else str(limit)
+    if field.name == 'photo':
+        attrs.update({'accept': '.jpg,.jpeg,.png,.webp', 'data-max-bytes': str(5 * 1024 * 1024)})
+        initial = getattr(field.value(), 'name', '')
+        if initial: attrs['data-current-file'] = initial.rsplit('/', 1)[-1]
     return field.as_widget(attrs=attrs)
 
 @register.inclusion_tag('includes/form_fields.html')
-def form_fields(form):
+def form_fields(form, wizard=False, operation=""):
     groups = OrderedDict()
     for field in form.visible_fields():
         if field.name in ['name','generic_name','category','form','dosage','manufacturer','barcode','photo']:
@@ -67,7 +82,19 @@ def form_fields(form):
             group = 'Coordonnées'
         else: group = 'Détails de l’opération'
         groups.setdefault(group, []).append(field)
-    return {'form': form, 'groups': groups.items()}
+    layouts = {
+        'receipt': [('Articles reçus', ['line', 'quantity']), ('Traçabilité du lot', ['number', 'expires_on']), ('Confirmation', ['confirm'])],
+        'inventory': [('Comptage physique', ['counted', 'reason']), ('Disponibilité du lot', ['blocked']), ('Confirmation', ['confirm'])],
+        'return': [('Article retourné', ['line', 'quantity', 'reason']), ('Remise en stock', ['restock']), ('Remboursement effectué', ['refund_reference']), ('Confirmation', ['confirm'])],
+    }
+    if operation in layouts:
+        groups = OrderedDict((label, [form[name] for name in names if name in form.fields])
+                             for label, names in layouts[operation])
+    sections = list(groups.items())
+    if wizard:
+        sections = [(name if index < len(sections) - 1 else 'Contrôle et récapitulatif', fields)
+                    for index, (name, fields) in enumerate(sections)]
+    return {'form': form, 'groups': sections, 'wizard': wizard}
 
 @register.inclusion_tag('includes/nav_item.html')
 def nav_item(request, route, label, glyph, key=None):
@@ -111,7 +138,8 @@ def operation_ui(context):
         'purchase_create':('Créer la commande','La commande reste en brouillon ; elle ne modifie pas le stock.'),
     }
     label,help_text=options.get(route,('Enregistrer','Les champs marqués « obligatoire » doivent être renseignés.'))
-    return {'label':label,'help':help_text}
+    kind = {'purchase_receive': 'receipt', 'inventory': 'inventory', 'sale_return': 'return'}.get(route, '')
+    return {'label':label,'help':help_text,'kind':kind,'today':timezone.localdate().isoformat()}
 
 @register.filter
 def display_value(value):
@@ -122,3 +150,32 @@ def display_value(value):
 @register.filter
 def subtract(value, other):
     return value - other
+
+
+@register.filter
+def field_hint(field):
+    """Aide éditoriale ; aucune nouvelle règle de délivrance ou de paiement."""
+    return {
+        'barcode': 'Facultatif. Scannez ou saisissez le code ; son unicité sera vérifiée à l’enregistrement.',
+        'photo': 'JPEG, PNG ou WebP, 5 Mo maximum. L’image sera contrôlée à l’enregistrement.',
+        'purchase_price': 'Prix unitaire d’achat en ariary, strictement positif.',
+        'sale_price': 'Prix unitaire de vente en ariary, strictement positif.',
+        'threshold': 'Quantité minimale souhaitée. Une alerte apparaît lorsque le disponible atteint ce seuil.',
+        'authorized': 'À cocher uniquement après contrôle de l’autorisation de délivrance.',
+        'requires_prescription': 'L’ordonnance devra être contrôlée au moment de la vente.',
+        'counted': 'Indiquez le nombre d’unités physiquement présentes, y compris zéro.',
+        'refund_reference': 'Référence du remboursement déjà réalisé en dehors de PharmaGest.',
+    }.get(field.name, '')
+
+
+@register.filter
+def minor_units(value):
+    """Montant exact en centimes pour les aides UI ; jamais de flottant."""
+    try:
+        amount = Decimal(str(value))
+        if not amount.is_finite(): return ''
+        cents = amount * 100
+        if cents != cents.to_integral_value(): return ''
+        return str(int(cents))
+    except (InvalidOperation, TypeError, ValueError):
+        return ''

@@ -11,6 +11,7 @@ const base = process.env.PHARMAGEST_URL || 'http://127.0.0.1:8000';
 const origin = new URL(base).origin;
 const output = path.resolve(process.env.UX_OUTPUT_DIR || '/tmp/pharmagest-ux');
 const routes = (process.env.UX_ROUTES || '/,/catalogue/medicaments/,/stocks/,/achats/,/ventes/,/rapports/').split(',');
+if (process.env.UX_WIZARD === '1') routes.push('/catalogue/medicaments/ajouter/');
 if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGEST_SALE_ID}/`);
 
 (async () => {
@@ -65,6 +66,77 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
             assert.equal((await page.locator('#cash-change').textContent()).replace(/\s/g, ''), '500,00Ar');
           }
         }
+        if (await page.locator('form[data-wizard]').count()) {
+          const wizard = page.locator('form[data-wizard]');
+          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          assert.equal(await page.evaluate(() => document.activeElement.id), 'id_name');
+          assert(await page.locator('#id_name_feedback').textContent());
+          await page.locator('#id_name').fill('Médicament de recette UX');
+          await page.locator('#id_form').fill('Comprimé');
+          const firstCategory = await page.locator('#id_category option').evaluateAll(options => options.find(option => option.value)?.value);
+          assert(firstCategory, 'Créer une catégorie fictive avant la recette du formulaire.');
+          await page.locator('#id_category').selectOption(firstCategory);
+          await page.locator('#id_photo').setInputFiles({
+            name: 'recette.png', mimeType: 'image/png',
+            buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=', 'base64'),
+          });
+          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          await page.locator('#id_purchase_price').fill('-1');
+          await page.locator('#id_sale_price').fill('15000');
+          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          assert.equal(await page.evaluate(() => document.activeElement.id), 'id_purchase_price');
+          assert((await page.locator('#id_purchase_price_feedback').textContent()).includes('0,01'));
+          await page.locator('#id_purchase_price').fill('10000');
+          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          assert.equal((await page.locator('[data-wizard-summary]').textContent()).replace(/\s/g, '').includes('15000,00Ar'), true);
+          assert(await page.locator('[data-wizard-submit]').isVisible());
+          await page.getByRole('button', { name: 'Précédent', exact: true }).click();
+          await page.getByRole('button', { name: 'Précédent', exact: true }).click();
+          assert.equal(await page.locator('#id_name').inputValue(), 'Médicament de recette UX');
+          assert.equal(await page.locator('#id_photo').evaluate(input => input.files[0]?.name), 'recette.png');
+          await page.locator('[data-wizard-go="2"]').click();
+          assert.equal(await wizard.locator('[data-wizard-step]:visible').count(), 1);
+          // Aucune soumission finale : les données de recette ne sont pas enregistrées.
+        }
+        const operationForm = page.locator('form[data-operation]');
+        if (await operationForm.count()) {
+          const kind = await operationForm.getAttribute('data-operation');
+          await page.locator('[data-operation-preview]').waitFor({ state: 'visible' });
+          if (kind === 'inventory') {
+            const before = BigInt(await operationForm.getAttribute('data-stock-before'));
+            const counted = before >= 2n ? before - 2n : before + 1n;
+            await page.locator('#id_counted').fill(counted.toString());
+            assert((await page.locator('[data-preview-delta]').textContent()).includes(before >= 2n ? '-2' : '+1'));
+            await page.locator('#id_blocked').check();
+            assert.equal(await page.locator('[data-preview-blocked]').textContent(), 'Bloqué à la vente');
+          } else {
+            const record = await page.locator('[data-operation-line]').evaluateAll(nodes => nodes.map(node => ({ ...node.dataset })).find(item => BigInt(item.remaining) > 0n));
+            assert(record, 'Préparer une ligne avec un reliquat positif pour la recette.');
+            await page.locator('#id_line').selectOption(record.lineId);
+            const quantity = BigInt(record.remaining) >= 2n ? 2n : 1n;
+            await page.locator('#id_quantity').fill(quantity.toString());
+            assert.equal(await page.locator('#id_quantity').getAttribute('max'), record.remaining);
+            assert((await page.locator('[data-preview-remaining]').textContent()).includes((BigInt(record.remaining) - quantity).toString()));
+            assert.notEqual(await page.locator('[data-preview-amount]').textContent(), '—');
+            if (kind === 'return') {
+              await page.locator('#id_restock').uncheck();
+              assert.equal(await page.locator('[data-preview-stock]').textContent(), 'Aucune réintégration');
+              const today = await operationForm.getAttribute('data-today');
+              if (record.blocked === '1' || record.expires < today) {
+                await page.locator('#id_restock').check();
+                assert.equal(await page.locator('#id_restock').evaluate(input => input.validity.customError), true);
+                assert((await page.locator('#id_restock_feedback').textContent()).includes('Décochez'));
+                await page.locator('#id_restock').uncheck();
+              }
+            }
+            await page.locator('#id_quantity').fill((BigInt(record.remaining) + 1n).toString());
+            await page.locator('#id_quantity').blur();
+            assert(await page.locator('#id_quantity_feedback').textContent());
+            await page.locator('#id_quantity').fill(quantity.toString());
+          }
+          assert(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)));
+          // Aucun clic sur le bouton final : ni stock, ni retour, ni réception modifiés.
+        }
         await page.screenshot({ path: path.join(output, `${width}-${route.replace(/[^a-z0-9]/gi, '_') || 'accueil'}.png`), fullPage: true });
         report.push({ width, route, status: 'ok' });
       }
@@ -75,6 +147,15 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
     for (const route of routes) {
       assert.equal((await nativePage.goto(base + route)).status(), 200);
       assert(await nativePage.locator('#navigation-panel').isVisible());
+      if (await nativePage.locator('form[data-operation]').count()) {
+        assert.equal(await nativePage.locator('form[data-operation]').evaluate(form => form.noValidate), false);
+        assert(!(await nativePage.locator('[data-operation-preview]').isVisible()));
+      }
+      if (await nativePage.locator('form[data-wizard]').count()) {
+        assert.equal(await nativePage.locator('[data-wizard-step]:visible').count(), 3);
+        assert(await nativePage.locator('[data-wizard-submit]').isVisible());
+        assert.equal(await nativePage.locator('form[data-wizard]').evaluate(form => form.noValidate), false);
+      }
     }
     await nativeContext.close();
     assert.deepEqual(runtimeErrors, [], 'Erreurs JavaScript');

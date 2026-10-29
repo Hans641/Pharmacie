@@ -74,7 +74,12 @@
     if (form.dataset.confirm && !form.dataset.confirmed && dialog?.showModal) {
       event.preventDefault();
       const submitter = event.submitter;
+      $('#confirm-title').textContent = form.dataset.confirmTitle || 'Confirmer l’opération';
       $('#confirm-description').textContent = form.dataset.confirm;
+      const confirmButton = $('#confirm-submit');
+      confirmButton.textContent = form.dataset.confirmLabel || 'Confirmer';
+      confirmButton.classList.toggle('btn-primary', form.dataset.confirmIntent === 'primary');
+      confirmButton.classList.toggle('btn-danger', form.dataset.confirmIntent !== 'primary');
       dialog.returnValue = '';
       dialog.addEventListener('close', () => {
         if (dialog.returnValue === 'confirm') {
@@ -112,16 +117,6 @@
   });
   const errorSummary = $('[data-error-summary]');
   if (errorSummary) errorSummary.focus();
-
-  // Aide de saisie native : ne remplace aucune validation serveur.
-  document.addEventListener('focusout', event => {
-    const input = event.target;
-    if (input.matches('input:not([type="hidden"]),select,textarea') && input.willValidate && !input.validity.valid) input.setAttribute('aria-invalid', 'true');
-  });
-  document.addEventListener('input', event => {
-    const input = event.target;
-    if (input.willValidate && input.validity.valid && !input.closest('.has-error')) input.removeAttribute('aria-invalid');
-  });
 
   // Caisse : recherche puis quantité ; aucune validation de vente automatique.
   const cashSearch = $('#cash-search');
@@ -202,34 +197,51 @@
   const resultRoot = $('[data-list-results]');
   if (resultRoot && window.fetch && window.AbortController) {
     let timer, controller, sequence = 0;
+    const loading = $('[data-search-loading]');
+    const loadingState = state => {
+      if (loading) {
+        loading.hidden = state === 'idle';
+        loading.classList.toggle('is-error', state === 'error');
+        $('.loading-copy', loading).textContent = state === 'error' ? 'Recherche automatique indisponible. Utilisez le bouton Rechercher.' : 'Recherche en cours…';
+        $('.loading-bars', loading).hidden = state === 'error';
+      }
+      if (state === 'busy') resultRoot.setAttribute('aria-busy', 'true');
+      else resultRoot.removeAttribute('aria-busy');
+    };
     const search = $('form[data-live-search] input[name="q"]');
     if (search) {
       search.addEventListener('input', () => {
         clearTimeout(timer);
         controller?.abort();
         const current = ++sequence;
-        resultRoot.removeAttribute('aria-busy');
+        loadingState('idle');
         timer = setTimeout(async () => {
           controller = new AbortController();
           const form = search.form;
           const url = new URL(form.action || location.href);
           url.search = new URLSearchParams(new FormData(form)).toString();
           url.searchParams.delete('page');
-          resultRoot.setAttribute('aria-busy', 'true');
+          loadingState('busy');
           announce('Recherche en cours.');
+          let failed = false;
           try {
             const response = await fetch(url, { signal: controller.signal, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (!response.ok || response.redirected) throw new Error('Recherche indisponible');
             const html = new DOMParser().parseFromString(await response.text(), 'text/html');
             const replacement = $('[data-list-results]', html);
-            if (!replacement || current !== sequence) return;
+            if (current !== sequence) return;
+            if (!replacement) throw new Error('Résultats indisponibles');
             resultRoot.replaceChildren(...replacement.childNodes);
             history.replaceState(null, '', url);
             announce('Résultats mis à jour.');
           } catch (error) {
-            if (error.name !== 'AbortError') announce('Recherche automatique indisponible. Utilisez le bouton Rechercher.');
+            if (error.name !== 'AbortError' && current === sequence) {
+              failed = true;
+              loadingState('error');
+              announce('Recherche automatique indisponible. Utilisez le bouton Rechercher.');
+            }
           } finally {
-            if (current === sequence) resultRoot.removeAttribute('aria-busy');
+            if (current === sequence && !failed) loadingState('idle');
           }
         }, 450);
       });

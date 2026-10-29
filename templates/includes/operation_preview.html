@@ -1,0 +1,20 @@
+{% load ui %}
+<section class="operation-preview" aria-labelledby="operation-preview-title" data-operation-preview hidden>
+  <div class="operation-preview-heading"><span class="metric-icon blue">{% icon 'receipt' %}</span><div><h2 id="operation-preview-title">Avant de confirmer</h2><p>Estimation selon les informations affichées et votre saisie.</p></div></div>
+  <dl class="operation-preview-grid">
+    {% if operation.kind == 'inventory' %}
+    <div><dt>Stock avant comptage</dt><dd>{{ form.initial.counted }} unités</dd></div>
+    <div><dt>Quantité comptée</dt><dd data-preview-count>—</dd></div>
+    <div class="preview-primary"><dt>Correction prévue</dt><dd data-preview-delta>—</dd></div>
+    <div><dt>Statut après confirmation</dt><dd data-preview-blocked>—</dd></div>
+    {% else %}
+    <div class="preview-full"><dt>Article sélectionné</dt><dd data-preview-name>Choisissez une ligne</dd></div>
+    <div><dt>{% if operation.kind == 'receipt' %}Quantité reçue aujourd’hui{% else %}Quantité retournée{% endif %}</dt><dd data-preview-count>—</dd></div>
+    <div><dt>{% if operation.kind == 'receipt' %}Restant à recevoir après cette livraison{% else %}Encore retournable après ce retour{% endif %}</dt><dd data-preview-remaining>—</dd></div>
+    <div class="preview-primary"><dt>{% if operation.kind == 'receipt' %}Valeur de cette réception{% else %}Remboursement à consigner{% endif %}</dt><dd data-preview-amount>—</dd></div>
+    <div><dt>Effet prévu sur le stock</dt><dd data-preview-stock>—</dd></div>
+    {% endif %}
+  </dl>
+  <p class="operation-preview-status" data-preview-status role="status" aria-atomic="true"></p>
+  <p class="panel-note">Le serveur revérifie les quantités et l’éligibilité lors de l’enregistrement. Aucune opération n’est effectuée par ce récapitulatif.</p>
+</section>

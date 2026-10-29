@@ -7,8 +7,11 @@
   <title>{% block page_title %}{{ title|default:'Bienvenue' }}{% endblock %} · PharmaGest</title>
   <link rel="stylesheet" href="{% static 'css/vendor/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/experience.css' %}">
   <link rel="stylesheet" href="{% static 'css/print.css' %}" media="print">
+  <script src="{% static 'js/forms.js' %}" defer></script>
   <script src="{% static 'js/app.js' %}" defer></script>
+  <script type="module" src="{% static 'js/operations.js' %}"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Aller au contenu</a>
