@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% load ui %}
 {% block content %}
-<div class="page-heading"><div><div class="eyebrow">Votre activité</div><h1>Tableau de bord</h1><p>Bonjour {{ user.first_name|default:user.username }}. Retrouvez les opérations et les points à surveiller.</p></div>{% if perms.pharmacy.add_sale %}<a class="btn btn-primary" href="{% url 'sale_create' %}">{% icon 'plus' %} Nouvelle vente</a>{% endif %}</div>
+<div class="page-heading"><div><div class="eyebrow">Votre activité</div><h1>Tableau de bord</h1><p>Bonjour {{ user.first_name|default:user.username }}. Retrouvez les opérations et les points à surveiller.</p></div>{% include 'includes/new_sale_actions.html' %}</div>
 {% if low_count or expired_count or expiring_count %}<div class="alert-links" aria-label="Points à surveiller">
   {% if expired_count %}<a class="alert-link danger" href="{% url 'stock' %}?status=expired">{% icon 'warning' %}<span><strong>{{ expired_count }} lot{{ expired_count|pluralize }} périmé{{ expired_count|pluralize }}</strong><small>Consulter les lots à retirer de la délivrance</small></span></a>{% endif %}
   {% if low_count %}<a class="alert-link" href="{% url 'entity_list' 'medicaments' %}?sort=stock">{% icon 'box' %}<span><strong>{{ low_count }} stock{{ low_count|pluralize }} faible{{ low_count|pluralize }}</strong><small>Voir le catalogue par stock croissant</small></span></a>{% endif %}

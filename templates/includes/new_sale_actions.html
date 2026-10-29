@@ -1,0 +1,10 @@
+{% load ui %}
+{% if perms.pharmacy.add_sale %}
+<div class="actions new-sale-actions">
+  <form method="post" action="{% url 'sale_create' %}">
+    {% csrf_token %}<input type="hidden" name="customer" value="">
+    <button class="btn btn-primary" type="submit">{% icon 'plus' %} Ouvrir une vente comptoir</button>
+  </form>
+  <a class="btn btn-ghost" href="{% url 'sale_create' %}">Avec un client</a>
+</div>
+{% endif %}

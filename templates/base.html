@@ -12,6 +12,7 @@
   <script src="{% static 'js/forms.js' %}" defer></script>
   <script src="{% static 'js/app.js' %}" defer></script>
   <script type="module" src="{% static 'js/operations.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main-content">Aller au contenu</a>
