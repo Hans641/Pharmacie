@@ -3,7 +3,7 @@
 <div class="eyebrow">ACTIVITÉ COMMERCIALE</div>
 <h1>Ventes & caisse</h1>
 <p>Ouvrez une vente ou retrouvez les transactions enregistrées.</p>
-</div>{% if perms.pharmacy.add_sale %}<a class="btn btn-primary" href="{% url 'sale_create' %}">{% icon 'plus' %} Nouvelle vente</a>{% endif %}</div>
+</div>{% include 'includes/new_sale_actions.html' %}</div>
 <section class="panel">
 <form class="filters" method="get" data-live-search>
 <input class="form-control search" name="q" value="{{ request.GET.q }}" placeholder="Client ou opérateur" aria-label="Recherche">

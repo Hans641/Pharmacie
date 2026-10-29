@@ -58,13 +58,46 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
         if (await page.locator('#cash-search').count()) {
           await page.keyboard.press('F2');
           assert.equal(await page.evaluate(() => document.activeElement.id), 'cash-search');
+          const options = await page.locator('#id_medicine option').evaluateAll(nodes => nodes.filter(node => node.value).map(node => ({ id: node.value, minor: node.dataset.priceMinor })));
+          const lots = await page.locator('#lot-data').evaluate(template => [...template.content.querySelectorAll('span')].map(node => ({ ...node.dataset })));
+          const rows = await page.locator('[data-cart-lot]').evaluateAll(nodes => nodes.map(node => ({ id: node.dataset.cartLot, quantity: node.dataset.cartQuantity })));
+          const reserved = new Map();
+          rows.forEach(row => reserved.set(row.id, (reserved.get(row.id) || 0n) + BigInt(row.quantity)));
+          const option = options.find(item => lots.some(lot => lot.medicine === item.id && BigInt(lot.quantity) > (reserved.get(lot.id) || 0n)));
+          assert(option, 'Préparer au moins un médicament délivrable avec du stock hors panier.');
+          await page.locator('#id_medicine').selectOption(option.id);
+          assert.equal(await page.evaluate(() => document.activeElement.id), 'id_quantity');
+          await page.locator('#id_quantity').fill('1');
+          const expected = `${BigInt(option.minor) / 100n},${(BigInt(option.minor) % 100n).toString().padStart(2, '0')}Ar`;
+          assert.equal((await page.locator('[data-item-price]').textContent()).replace(/\s/g, ''), expected);
+          assert.equal((await page.locator('[data-item-subtotal]').textContent()).replace(/\s/g, ''), expected);
+          const available = BigInt(await page.locator('#id_quantity').getAttribute('max'));
+          await page.locator('#id_quantity').fill((available + 1n).toString());
+          await page.locator('#id_quantity').blur();
+          assert(await page.locator('#id_quantity_feedback').textContent());
+          await page.locator('#id_quantity').fill('1');
+          // Aucun ajout au panier : seul le récapitulatif local est exercé.
+        }
+        if (await page.locator('[data-checkout]').count()) {
           await page.keyboard.press('F4');
-          const cash = page.locator('[data-cash-tools]');
-          if (await cash.count()) {
-            const total = await page.locator('[data-checkout]').getAttribute('data-total');
-            await page.locator('#cash-received').fill((Number(total) + 500).toFixed(2).replace('.', ','));
-            assert.equal((await page.locator('#cash-change').textContent()).replace(/\s/g, ''), '500,00Ar');
+          assert.equal(await page.evaluate(() => document.activeElement.name), 'method');
+          const total = BigInt(await page.locator('[data-checkout]').getAttribute('data-total-minor'));
+          const received = total + 50000n;
+          await page.locator('#cash-received').fill(`${received / 100n},${(received % 100n).toString().padStart(2, '0')}`);
+          assert.equal((await page.locator('#cash-change').textContent()).replace(/\s/g, ''), '500,00Ar');
+          await page.locator('[data-cash-exact]').click();
+          assert.equal((await page.locator('#cash-change').textContent()).replace(/\s/g, ''), '0,00Ar');
+          assert.equal(await page.locator('[name="confirm"]').isChecked(), false);
+          if (await page.locator('[name="method"][value="mobile"]').count()) {
+            await page.locator('[name="method"][value="mobile"]').check();
+            assert.equal(await page.locator('[name="reference"]').evaluate(input => input.required && !input.disabled), true);
+            assert.equal(await page.locator('[name="verified"]').evaluate(input => input.required && !input.checked), true);
+            await page.locator('[name="method"][value="cash"]').check();
+            assert.equal(await page.locator('[name="reference"]').evaluate(input => input.disabled && !input.required), true);
           }
+          const prescription = await page.locator('[data-prescription="1"]').count() > 0;
+          assert.equal(await page.locator('[name="prescription_checked"]').evaluate(input => input.required), prescription);
+          // Aucun encaissement et aucune confirmation de paiement ne sont soumis.
         }
         if (await page.locator('form[data-wizard]').count()) {
           const wizard = page.locator('form[data-wizard]');

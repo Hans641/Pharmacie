@@ -323,3 +323,125 @@ class OperationPresentationTests(Fixtures, TestCase):
         self.assertContains(response, 'Articles reçus')
         self.assertContains(response, 'type="module" src="/static/js/operations.js"')
         self.assertContains(response, 'id="confirm-submit"')
+
+class CashierExperienceTests(Fixtures, TestCase):
+    def setUp(self):
+        self.make_data()
+        self.client.force_login(self.user)
+
+    def test_counter_shortcut_opens_draft_without_stock_or_payment(self):
+        from .models import Sale, Payment
+        self.received()
+        response = self.client.get('/ventes/')
+        self.assertContains(response, 'Ouvrir une vente comptoir')
+        self.assertContains(response, 'action="/ventes/nouvelle/"')
+        self.assertContains(response, 'name="customer" value=""')
+        self.assertEqual(Sale.objects.count(), 0)
+        response = self.client.post('/ventes/nouvelle/', {'customer': ''})
+        sale = Sale.objects.get()
+        self.assertRedirects(response, f'/ventes/{sale.pk}/')
+        self.assertEqual(sale.status, 'draft')
+        self.assertEqual(sale.author, self.user)
+        self.assertIsNone(sale.customer)
+        self.assertEqual(self.med.available, 20)
+        self.assertFalse(Payment.objects.exists())
+
+    def test_counter_shortcut_is_not_available_to_read_only_role(self):
+        from .models import Sale
+        setup_roles()
+        self.other.groups.add(Group.objects.get(name='Responsable de gestion'))
+        self.client.force_login(self.other)
+        for url in ['/', '/ventes/']:
+            self.assertNotContains(self.client.get(url), 'Ouvrir une vente comptoir')
+        self.assertEqual(self.client.post('/ventes/nouvelle/', {'customer': ''}).status_code, 403)
+        self.assertFalse(Sale.objects.exists())
+
+    def test_empty_search_explains_no_match_and_keeps_native_search(self):
+        sale = Sale.objects.create(author=self.user)
+        response = self.client.get(f'/ventes/{sale.pk}/', {'q': 'INEXISTANT-UI'})
+        self.assertContains(response, 'Aucun médicament trouvé')
+        self.assertContains(response, 'INEXISTANT-UI')
+        self.assertContains(response, 'Tous les produits')
+        self.assertContains(response, 'method="get"')
+        self.assertContains(response, 'data-cash-search')
+        # Après un POST invalide, la vue rétablit le catalogue complet : aucun faux compte filtré.
+        response = self.client.post(f'/ventes/{sale.pk}/?q=INEXISTANT-UI', {
+            'action': 'add', 'medicine': self.med.pk, 'quantity': '0',
+        })
+        self.assertContains(response, 'data-error-summary')
+        self.assertNotContains(response, 'class="cash-search-result"')
+
+    def test_add_estimate_uses_price_on_option_and_actual_cart_quantities(self):
+        self.received()
+        sale = self.sale()
+        response = self.client.get(f'/ventes/{sale.pk}/')
+        self.assertContains(response, 'data-price-minor="2000"')
+        self.assertContains(response, 'data-cart-quantity="3"')
+        self.assertContains(response, 'data-item-preview hidden')
+        self.assertContains(response, 'Sous-total de l’ajout estimé')
+        self.assertNotContains(response, 'id="medicine-data"')
+        self.assertContains(response, 'data-total-minor="6000"')
+        self.assertEqual(self.med.available, 20)
+
+    def test_prescription_indicator_and_server_check_remain_consistent(self):
+        from .models import Payment
+        self.med.requires_prescription = True
+        self.med.save()
+        self.received()
+        sale = self.sale()
+        response = self.client.get(f'/ventes/{sale.pk}/')
+        self.assertContains(response, 'data-prescription="1"')
+        self.assertContains(response, 'Ordonnance requise')
+        response = self.client.post(f'/ventes/{sale.pk}/', {
+            'action': 'validate', 'method': 'cash', 'confirm': 'on',
+        })
+        self.assertContains(response, 'Contrôlez')
+        sale.refresh_from_db()
+        self.assertEqual(sale.status, 'draft')
+        self.assertEqual(self.med.available, 20)
+        self.assertFalse(Payment.objects.exists())
+
+    def test_validated_sale_keeps_receipt_and_explicit_next_counter_action(self):
+        from . import services
+        self.received()
+        sale = self.sale()
+        services.validate_sale(self.user, sale.pk)
+        response = self.client.get(f'/ventes/{sale.pk}/')
+        self.assertContains(response, 'Télécharger le reçu PDF')
+        self.assertContains(response, 'Ouvrir une vente comptoir')
+        self.assertContains(response, 'Avec un client')
+        self.assertNotContains(response, 'data-cart-add')
+        self.assertNotContains(response, 'data-checkout')
+
+    def test_cashier_module_is_scoped_to_sales_and_cash_aid_has_no_post_name(self):
+        from html.parser import HTMLParser
+        class Controls(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.received = None
+            def handle_starttag(self, tag, attrs):
+                if tag == 'input' and dict(attrs).get('id') == 'cash-received':
+                    self.received = dict(attrs)
+        self.received()
+        sale = self.sale()
+        response = self.client.get(f'/ventes/{sale.pk}/')
+        self.assertContains(response, 'src="/static/js/cashier.js"')
+        self.assertContains(response, 'data-cash-exact hidden')
+        parser = Controls()
+        parser.feed(response.content.decode())
+        self.assertIsNotNone(parser.received)
+        self.assertNotIn('name', parser.received)
+        self.assertNotContains(self.client.get('/stocks/'), 'src="/static/js/cashier.js"')
+
+    def test_user_can_validate_without_seeing_cart_mutation_controls(self):
+        from django.contrib.auth.models import Permission
+        self.other.user_permissions.add(*Permission.objects.filter(
+            content_type__app_label='pharmacy', codename__in=['view_sale', 'validate_sale']))
+        self.received()
+        sale = self.sale()
+        self.client.force_login(self.other)
+        response = self.client.get(f'/ventes/{sale.pk}/')
+        self.assertContains(response, 'data-checkout')
+        self.assertContains(response, 'src="/static/js/cashier.js"')
+        self.assertNotContains(response, 'data-cart-add')
+        self.assertNotContains(response, 'name="method" value="mobile"')

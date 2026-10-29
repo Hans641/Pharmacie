@@ -82,3 +82,9 @@ Voir [la conception et la recette de cette itération](docs/CONCEPTION_EXPERIENC
 Ces opérations disposent d’un récapitulatif avant confirmation : reliquat et valeur reçue, écart d’inventaire signé, montant du retour et effet de la remise en stock. Les estimations sont recalculées à l’enregistrement côté serveur.
 
 Voir [les parcours opérationnels et leur recette](docs/PARCOURS_OPERATIONS.md). Tests de calcul sans dépendance : `node tools/operation_math.test.mjs`.
+
+### Caisse : ouverture rapide et estimation
+
+Le tableau de bord et la liste des ventes proposent une ouverture directe de vente comptoir. La caisse affiche une estimation avant ajout et une aide exacte au calcul de monnaie. Les prix historiques et les contrôles serveur restent inchangés.
+
+Voir [la recette de caisse et ses limites de vérification](docs/RECETTE_CAISSE.md). Tests de calcul : `node tools/cashier_math.test.mjs`.
