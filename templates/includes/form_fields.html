@@ -1,3 +1,21 @@
+{% load ui %}
 {% include 'includes/form_errors.html' %}
 {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-{% for group,fields in groups %}<fieldset class="form-section"><legend>{{ group }}</legend><div class="form-grid">{% for field in fields %}{% include 'includes/field.html' %}{% endfor %}</div></fieldset>{% endfor %}
+{% if wizard %}
+<nav class="wizard-progress" aria-label="Progression du formulaire" data-wizard-progress hidden>
+  <p class="wizard-caption" data-wizard-caption role="status" aria-atomic="true"></p>
+  <ol>{% for group, fields in groups %}<li><button type="button" class="wizard-step" data-wizard-go="{{ forloop.counter0 }}" aria-controls="medicine-step-{{ forloop.counter }}"><span class="wizard-step-number" aria-hidden="true"><span data-step-number>{{ forloop.counter }}</span><span data-step-complete hidden>{% icon 'check' %}</span></span><span>{{ group }}</span><span class="visually-hidden" data-step-state></span></button></li>{% endfor %}</ol>
+</nav>
+{% endif %}
+{% for group, fields in groups %}
+<fieldset class="form-section"{% if wizard %} id="medicine-step-{{ forloop.counter }}" data-wizard-step{% endif %}>
+  <legend tabindex="-1">{{ group }}</legend>
+  <div class="form-grid">{% for field in fields %}{% include 'includes/field.html' %}{% endfor %}</div>
+  {% if wizard and forloop.last %}
+  <section class="wizard-review" aria-labelledby="medicine-review-title" data-wizard-review hidden>
+    <div class="review-heading"><h2 id="medicine-review-title">Vérifier avant d’enregistrer</h2><p>Aucune donnée n’est enregistrée avant la confirmation finale.</p></div>
+    <div data-wizard-summary></div>
+  </section>
+  {% endif %}
+</fieldset>
+{% endfor %}

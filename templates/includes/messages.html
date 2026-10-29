@@ -1,3 +1,8 @@
-{% load ui %}{% for message in messages %}
-<div class="alert {{ message.tags }}" {% if 'error' in message.tags %}role="alert"{% else %}role="status"{% endif %}>{% if 'error' in message.tags %}{% icon 'warning' %}{% else %}{% icon 'check' %}{% endif %}<div>{{ message }}</div></div>
+{% load ui %}
+{% for message in messages %}
+<div class="{% if 'success' in message.tags %}toast-card success{% else %}alert {{ message.tags }}{% endif %}"{% if 'success' in message.tags %} data-toast{% endif %} {% if 'error' in message.tags %}role="alert"{% else %}role="status"{% endif %}>
+  {% if 'error' in message.tags or 'warning' in message.tags %}{% icon 'warning' %}{% else %}{% icon 'check' %}{% endif %}
+  <div class="message-content">{% if 'success' in message.tags %}<strong>Opération enregistrée</strong>{% endif %}<p>{{ message }}</p></div>
+  {% if 'success' in message.tags %}<button class="btn btn-ghost toast-dismiss" type="button" data-dismiss-toast aria-label="Fermer cette notification" hidden>{% icon 'close' %}</button>{% endif %}
+</div>
 {% endfor %}

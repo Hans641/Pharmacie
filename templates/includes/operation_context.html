@@ -1,0 +1,39 @@
+{% load ui %}
+{% if operation.kind == 'inventory' %}
+<section class="operation-context" aria-labelledby="operation-context-title">
+  <h2 id="operation-context-title">Avant le comptage</h2>
+  <p>Stock enregistré au chargement : <strong>{{ form.initial.counted }} unités</strong>.</p>
+  <span class="badge{% if form.initial.blocked %} danger{% else %} info{% endif %}">{% if form.initial.blocked %}{% icon 'lock' %} Lot bloqué{% else %}{% icon 'box' %} Lot non bloqué{% endif %}</span>
+  <p class="helptext">Comptez les unités physiquement présentes. Le motif et la différence seront conservés dans l’historique.</p>
+</section>
+{% elif operation.kind == 'receipt' %}
+<details class="operation-context operation-details">
+  <summary id="operation-context-title">Quantités restant à recevoir</summary>
+  <div class="operation-context-list">
+  {% for line in form.fields.line.queryset %}
+    <article data-operation-line data-line-id="{{ line.pk }}" data-remaining="{{ line.remaining }}" data-unit-minor="{{ line.unit_price|minor_units }}" data-name="{{ line.medicine }}">
+      <strong>{{ line.medicine }}</strong>
+      <p>Commandé : {{ line.quantity }} · déjà reçu : {{ line.received }} · restant : <strong>{{ line.remaining }}</strong></p>
+    </article>
+  {% empty %}<p>Aucune quantité ne reste à réceptionner.</p>{% endfor %}
+  </div>
+</details>
+{% elif operation.kind == 'return' %}
+<section class="operation-context" aria-labelledby="operation-context-title">
+  <h2 id="operation-context-title">Retour et remboursement</h2>
+  <p>Le remboursement est réalisé en dehors de PharmaGest. Sa référence permet de le tracer ici.</p>
+  <p class="helptext">La remise en stock nécessite un contrôle de l’éligibilité du produit ; un lot bloqué ou périmé ne peut pas être réintégré.</p>
+</section>
+<details class="operation-context operation-details">
+  <summary>Articles de la vente d’origine</summary>
+  <div class="operation-context-list">
+  {% for line in form.fields.line.queryset %}
+    <article data-operation-line data-line-id="{{ line.pk }}" data-remaining="{{ line.quantity|subtract:line.returned }}" data-unit-minor="{{ line.unit_price|minor_units }}" data-name="{{ line.lot.medicine }} · lot {{ line.lot.number }}" data-blocked="{{ line.lot.blocked|yesno:'1,0' }}" data-expires="{{ line.lot.expires_on|date:'Y-m-d' }}">
+      <strong>{{ line.lot.medicine }} · lot {{ line.lot.number }}</strong>
+      <p>Vendu : {{ line.quantity }} · déjà retourné : {{ line.returned }} · encore retournable : {{ line.quantity|subtract:line.returned }} · prix : {{ line.unit_price|money }}</p>
+      {% include 'includes/lot_status.html' with lot=line.lot %}
+    </article>
+  {% endfor %}
+  </div>
+</details>
+{% endif %}

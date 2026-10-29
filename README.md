@@ -70,3 +70,15 @@ La refonte comprend une caisse au clavier (F2/F4), une aide au calcul de monnaie
 - [Checklist et recette par rôle](docs/RECETTE_UX.md)
 
 Le script optionnel `tools/ux_browser_check.cjs` contrôle les quatre largeurs cibles sur un serveur lancé localement. Voir la recette pour les conditions et les limites de validation.
+
+### Formulaires accompagnés
+
+La création et la modification d’un médicament proposent trois étapes avec récapitulatif. Les retours inline aident à corriger les saisies simples ; Django conserve les validations métier. Sans JavaScript, toutes les sections restent visibles. Les notifications de succès sont fermables manuellement et les recherches conservent les résultats pendant le chargement.
+
+Voir [la conception et la recette de cette itération](docs/CONCEPTION_EXPERIENCE.md). Le contrôle navigateur facultatif s’active avec `UX_WIZARD=1`.
+
+### Réception, inventaire et retour
+
+Ces opérations disposent d’un récapitulatif avant confirmation : reliquat et valeur reçue, écart d’inventaire signé, montant du retour et effet de la remise en stock. Les estimations sont recalculées à l’enregistrement côté serveur.
+
+Voir [les parcours opérationnels et leur recette](docs/PARCOURS_OPERATIONS.md). Tests de calcul sans dépendance : `node tools/operation_math.test.mjs`.

@@ -1,0 +1,167 @@
+/* Itération UX : progression, erreurs correctives, notifications et attente.
+   Les formulaires restent intégralement visibles tant que JS n'est pas actif. */
+:root {
+  --motion-fast: 140ms;
+  --motion-gentle: 180ms;
+  --error-ring: 0 0 0 1px var(--danger);
+}
+
+/* Un état d'erreur local explique comment corriger, sans afficher du vert partout. */
+.field-feedback {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.field-feedback:empty { margin: 0; }
+.has-local-error .form-control {
+  border-color: var(--danger);
+  box-shadow: var(--error-ring);
+}
+.server-error-label { display: block; font-size: 14px; margin-bottom: 4px; }
+
+/* Le stepper reste un repère de progression, sans onglets ni soumissions cachées. */
+.wizard-progress {
+  padding: 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 28px;
+}
+.wizard-caption { margin: 0 0 16px; color: var(--green-dark); font-weight: 700; }
+.wizard-progress ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid #738c7c;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+.wizard-step-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 700;
+}
+.wizard-step[aria-current="step"] {
+  border: 2px solid var(--green);
+  padding: 11px;
+  color: var(--green-dark);
+  font-weight: 700;
+}
+.wizard-step.is-complete .wizard-step-number { background: var(--success-bg); color: var(--success); }
+.wizard-step:disabled { cursor: default; background: var(--bg); color: var(--muted); opacity: 1; }
+.wizard-enhanced .form-section { margin-top: 0; }
+.wizard-enhanced .form-section > legend { scroll-margin-top: 24px; }
+.wizard-enhanced .form-actions { gap: 12px; }
+.wizard-enhanced .form-actions > a { margin-left: auto; }
+
+/* Récapitulatif généré à partir des contrôles, jamais à partir de HTML utilisateur. */
+.wizard-review { margin-top: 28px; border: 1px solid var(--line); border-radius: var(--radius); }
+.review-heading { padding: 24px; background: var(--surface-soft); border-radius: 12px 12px 0 0; }
+.review-heading h2 { margin-bottom: 8px; }
+.review-heading p { margin: 0; font-size: 14px; color: var(--muted); }
+.review-section { padding: 20px 24px; border-top: 1px solid var(--line); }
+.review-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.review-section-heading h3 { margin: 0; }
+.review-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; margin: 0; }
+.review-list > div { min-width: 0; }
+.review-list dt { color: var(--muted); font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.review-list dd { color: var(--ink); font-size: 16px; margin: 0; overflow-wrap: anywhere; }
+
+/* Notifications en flux : pas de recouvrement du panier, pas de disparition imposée. */
+.toast-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--success);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgb(18 49 32 / 5%);
+  margin-bottom: 24px;
+}
+.toast-card > .icon { color: var(--success); margin-top: 3px; }
+.message-content { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.message-content strong { display: block; margin-bottom: 4px; }
+.message-content p { margin: 0; }
+.toast-dismiss { margin: -6px -8px -6px 0; flex-shrink: 0; }
+
+/* Squelette seulement pendant un vrai GET ; résultats précédents conservés. */
+.search-loading { display: flex; align-items: center; gap: 16px; padding: 16px 24px; background: var(--info-bg); color: var(--info); border-bottom: 1px solid var(--line); }
+.loading-copy { font-size: 14px; font-weight: 600; }
+.loading-bars { flex: 1; display: grid; gap: 6px; max-width: 200px; }
+.skeleton-line { display: block; height: 8px; border-radius: 4px; background: #c1d6e5; }
+.skeleton-line:last-child { width: 65%; }
+[data-list-results][aria-busy="true"]::before { content: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .wizard-step, .toast-dismiss { transition: border-color var(--motion-fast) ease, background-color var(--motion-fast) ease; }
+  .toast-card { animation: toast-enter var(--motion-gentle) ease-out; }
+  .search-loading .skeleton-line { animation: skeleton-pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes toast-enter { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes skeleton-pulse { to { opacity: .5; } }
+}
+@media (max-width: 600px) {
+  .wizard-progress { padding: 16px; }
+  .wizard-progress ol { grid-template-columns: 1fr; gap: 8px; }
+  .wizard-step { min-height: 48px; padding: 8px 12px; }
+  .wizard-step[aria-current="step"] { padding: 7px 11px; }
+  .review-list { grid-template-columns: 1fr; gap: 16px; }
+  .review-heading, .review-section { padding: 16px; }
+  .review-section-heading { align-items: flex-start; }
+  .toast-card { padding: 16px; }
+  .wizard-enhanced .form-actions > a { margin-left: 0; }
+  .search-loading { padding: 12px 16px; }
+}
+.search-loading.is-error { background: var(--warning-bg); color: var(--warning); }
+
+/* Réception, inventaire et retour : une page, un effet explicite avant confirmation. */
+.operation-details > summary {
+  min-height: 44px;
+  padding: 8px 0;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--green-dark);
+}
+.operation-context-list { display: grid; gap: 12px; margin-top: 12px; }
+.operation-context-list article { padding: 12px 0; border-top: 1px solid var(--line); }
+.operation-context-list p { margin: 6px 0; font-size: 14px; }
+.operation-context-list .badge { margin-top: 8px; }
+.operation-preview { margin: 28px 0 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.operation-preview-heading { display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px; background: var(--surface-soft); }
+.operation-preview-heading h2 { margin: 0 0 6px; }
+.operation-preview-heading p { margin: 0; font-size: 14px; color: var(--muted); }
+.operation-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 24px; }
+.operation-preview-grid > div { min-width: 0; }
+.operation-preview-grid dt { font-weight: 500; font-size: 14px; color: var(--muted); }
+.operation-preview-grid dd { margin: 6px 0 0; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.operation-preview-grid .preview-full { grid-column: 1 / -1; }
+.preview-primary dd { font-size: 24px; color: var(--green-dark); }
+.operation-preview-status { margin: 0; padding: 16px 24px; border-top: 1px solid var(--line); background: var(--info-bg); color: var(--info); font-size: 14px; }
+.operation-preview.has-warning .operation-preview-status { background: var(--warning-bg); color: var(--warning); }
+.operation-preview .panel-note { margin: 0; }
+@media (max-width: 600px) {
+  .operation-preview-heading, .operation-preview-grid, .operation-preview-status { padding: 16px; }
+  .operation-preview-grid { grid-template-columns: 1fr; gap: 20px; }
+}
+#confirm-description { overflow-wrap: anywhere; }
