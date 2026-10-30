@@ -224,3 +224,47 @@ Corrections : largeur minimale du catalogue au-dessus de 600 px avec défilement
 ### Retour hôte z_0k5lok — 30 octobre 2026
 
 Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS sont enregistrés comme réussis pour l'administrateur (11 à 360 px, neuf à 768 px). Arrêt sur la création de médicament : le scénario attend le champ prix alors que la capture montre toujours Identification. Cause exacte du non-avancement non démontrée. Le scénario active maintenant Continuer au clavier et vérifie l'étape atteinte, avec restitution des messages inline si elle reste bloquée. Aucun changement de validation applicative. Syntaxe Node et diff vérifiés ; nouvelle exécution hôte requise, les autres rôles et le sans-JS restent non validés.
+
+## Lot 1 — diagnostic avant correctif (reprise à 27ed6f6)
+
+**Aucune cause racine démontrée à ce stade.** Les changements précédents du scénario (activation de Continuer au clavier) ne constituent pas une résolution attestée de l'assistant. Le rapport z_0k5lok prouve un champ prix masqué ; le rapport 6zmmb904 prouve une attente de stabilité du bouton de période. Ils ne prouvent pas leur cause.
+
+La lecture de `forms.js` montre que seuls les `form[method="post"]` sont traités. Le GET du dashboard n'est donc pas mis en `noValidate` par ce script. L'assistant, lui, valide uniquement l'étape courante dans `forward()`, puis `show()` masque les autres étapes. Cela ne remplace pas une reproduction navigateur.
+
+### Exécution hôte requise
+
+```bash
+.venv/bin/python tools/run_ux_review.py --diagnose-lot1
+```
+
+Aucun nouveau paquet requis : réutilisation du Playwright et du navigateur déjà utilisés sur le poste. Base et médias temporaires, administrateur fictif, aucune soumission finale de médicament, aucune vente. Le script ne force pas les clics, n'ajoute pas de sleep et ne change pas les validateurs. Les clics du dashboard restent associés à `waitForURL` dans `Promise.all` ; Entrée depuis la date de fin est aussi testée.
+
+Le dossier annoncé contient `administrateur/lot1.json`, douze captures et `administrateur.log`. Pour chaque cas : état des contrôles (required/disabled/willValidate/valid/visible), noValidate réel, focus, messages inline et erreurs JS. Avec JS : séquence pointer/focus/click/submit et échantillons de géométrie/couverture du bouton. Les cookies d'authentification ne sont pas écrits dans le rapport. Les douze cas sont parcourus même si un cas est KO.
+
+Après transmission du rapport, comparer événements et géométrie, conclure bug produit ou scénario erroné, puis créer le correctif minimal et le test qui échoue avant celui-ci. Le lot 1 reste **en cours** ; la matrice du lot 2 et les lots suivants attendent ce diagnostic, conformément à l'ordre demandé.
+
+### Résultats réels de cette reprise
+
+Chrome direct : **non exécuté après échec de lancement**, `setsockopt: Operation not permitted`. Le lanceur de diagnostic échoue avant Playwright : socket locale refusée (`Operation not permitted`), rapport `/tmp/pharmagest-ux-report-ghyjmdhn/summary.json`. Aucun cas du nouveau diagnostic n'a été exécuté dans un navigateur ici.
+
+| Page / contrôle | Rôle | Largeur | JS | Thème | Résultat réel | Preuve |
+|---|---|---:|---|---|---|---|
+| Médicament — étape 1, souris | Administrateur | 360 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Médicament — étape 1, clavier | Administrateur | 360 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, souris | Administrateur | 360 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, Entrée | Administrateur | 360 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, souris | Administrateur | 360 | Sans | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, Entrée | Administrateur | 360 | Sans | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Médicament — étape 1, souris | Administrateur | 768 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Médicament — étape 1, clavier | Administrateur | 768 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, souris | Administrateur | 768 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, Entrée | Administrateur | 768 | Avec | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, souris | Administrateur | 768 | Sans | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+| Dashboard — période, Entrée | Administrateur | 768 | Sans | Clair | non exécuté — socket refusée | Rapport de lancement ci-dessus ; aucune capture |
+
+### Bilan intermédiaire du lot 1
+
+- Fichiers : `tools/ux_lot1_diagnose.cjs` (nouveau diagnostic), `tools/run_ux_review.py` (option dédiée), ce guide et mémoire de reprise. Avant : attente de champ ou de clic sans trace suffisante. Après : reproductions séparées et état du formulaire, événements et géométrie conservés pour chaque cas.
+- Tests navigateur ajoutés mais **non exécutés** : quatre passages assistant et huit passages période. Aucun test de non-régression produit « échec avant / succès après » revendiqué, puisqu'aucun correctif produit n'est encore justifié.
+- Vérifications réellement exécutées : **85 tests Django réussis en 158,053 s**, check Django, absence de différence de migration, **12 + 9 tests JS réussis**, syntaxe Node et compilation Python. Préparation isolée : 45 rendus serveur.
+- État des autres lots : lot 2 non commencé en attente du rapport ; lots 3 à 7 à suivre dans l'ordre ; lot 8 non autorisé et non commencé. Le bilan final et le plan des options seront produits après ces étapes, pas présentés comme achevés ici.

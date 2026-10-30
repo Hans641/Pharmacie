@@ -85,3 +85,15 @@ Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS son
 - Préférence locale non sensible seulement, contrôle masqué sans JS, préférence système en CSS ; palette écran commune aux pages, y compris authentification. Aucun modèle/vue/service/permission/migration modifié.
 - Contrôles : 12 tests de présentation/rendu réussis (22,704 s), check Django, syntaxe JS et diff sans erreur ; 17 paires par palette >=4,5:1, focus et bordure de champ >=3:1 sur surface ; comportement de préférence/synchronisation/stockage bloqué vérifié en VM Node, sans navigateur.
 - Guide MODE_SOMBRE créé avec fichiers, couverture, ratios et recette. Validation visuelle sombre, états natifs réels et impression encore à faire. Aucun commit/push. Prochaine action : choisir Sombre en pied de page sur le serveur utilisateur et examiner les écrans.
+
+## 30 octobre 2026 — Fusion sombre confirmée et reprise QA par lots
+
+- Git vérifié : main propre à `27ed6f6`, fusion `feat/dark-mode` après `bfad35e`, origin/main local identique. Ces faits remplacent les états « aucun commit » des notes antérieures, conservées comme historique. Pas d'accès distant effectué.
+- Consignes et guides relus ; travail limité au lot 1 tant que les causes ne sont pas démontrées. Modèles, vues, services, permissions et migrations préservés ; aucun nouveau composant ni dépendance.
+- Création de branche dans le dépôt actif refusée (.git en lecture seule). Copie isolée à /tmp/pharmagest-recette-frontend, branche fix/recette-frontend créée depuis main. Aucun merge/push effectué.
+- Diagnostic dédié ajouté : reproduction souris/clavier, 360/768 px, erreurs/focus de l'assistant, navigation GET du dashboard avec/sans JS et Entrée, géométrie/couverture du bouton et événements. Aucun sleep ni clic forcé, aucun POST métier final. Cause racine non démontrée ; aucun correctif produit spéculatif.
+- Lecture du code : forms.js ne sélectionne que les formulaires POST. Le GET du dashboard ne reçoit donc pas noValidate de ce script. Cette observation n'explique pas à elle seule l'échec de clic.
+- Chrome direct bloqué (setsockopt Operation not permitted) ; tentative du lanceur de diagnostic arrêtée sur socket locale refusée, rapport /tmp/pharmagest-ux-report-ghyjmdhn. Douze cas non exécutés dans le navigateur ; commande hôte et tableau honnête ajoutés à RECETTE_UX. Attendre le rapport avant de conclure sur le lot 1 et poursuivre le lot 2.
+
+- Non-régression réellement exécutée dans la copie : 85 tests Django réussis (158,053 s), check Django sans anomalie, aucune différence de migration, 12 tests JS caisse et 9 tests JS opérations réussis. Syntaxe du diagnostic Node et compilation du lanceur Python valides. Préparation isolée réussie : 45 rendus serveur.
+- Commit atomique de test `a83f1df` sur fix/recette-frontend dans la copie isolée. Documentation mise à jour séparément ; bundle local destiné à importer uniquement cette branche, sans déplacement de main, merge ou push. Aucun correctif applicatif déclaré résolu ; attente du rapport lot1.json avant la suite.

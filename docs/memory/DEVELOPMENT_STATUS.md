@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière vérification : **30 octobre 2026**. Reprise de recette à `main` / `7c871d3` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
+Dernière vérification : **30 octobre 2026**. Reprise QA à `main` / `27ed6f6` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -32,7 +32,11 @@ Les tests PDF vérifient notamment réponse, type et signature ; ils ne prouvent
 
 ## Dernière étape et travail actuel
 
-Caisse, dashboard et stocks sont intégrés ; fusion stocks confirmée à `7c871d3` dans le dépôt actif. La référence locale `origin/main` est identique lors de la reprise ; le push a été déclaré effectué par l'utilisateur, sans vérification distante depuis l'agent. Tâche actuelle réorientée par l'utilisateur : mode sombre commun à toutes les pages, avec préférence système et choix explicite en pied de page. La recette navigateur reste incomplète ; le dernier rapport `6zmmb904` échoue sur un clic de période instable, sans preuve de résolution. Aucun commit, merge ou push demandé pour cette étape.
+Le dépôt actif est propre à `main` / `27ed6f6`, fusion de `feat/dark-mode` (`bfad35e`). La référence locale `origin/main` lui est identique ; aucun accès distant effectué pour confirmer GitHub. Les anciens passages « aucun commit » décrivent les sessions antérieures à la fusion et ne sont plus l'état actuel.
+
+Nouvelle tâche : QA frontend par lots 1 à 7, sans modèle/vue/service/permission/migration modifié dans les lots 1 à 6, sans fusion/push. Lot 1 en cours : causes de l'assistant et du clic de période non démontrées. Chrome et sockets refusés dans le bac à sable. Branche `fix/recette-frontend` créée depuis `27ed6f6` dans une copie isolée `/tmp/pharmagest-recette-frontend`, car le `.git` du dépôt actif est en lecture seule. Aucun déplacement de main dans le dépôt actif.
+
+Un diagnostic dédié à lancer sur le poste est préparé : `.venv/bin/python tools/run_ux_review.py --diagnose-lot1`. Il parcourt douze cas souris/clavier, à 360/768 px, avec/sans JS pour le dashboard, avec preuves de focus, validation et géométrie. Ce diagnostic n'est pas une correction : attendre son rapport avant de conclure et avant de passer à la matrice du lot 2. Voir le tableau de résultats du lot 1 dans `../RECETTE_UX.md`.
 
 ## Prochaines étapes prioritaires
 
@@ -91,3 +95,11 @@ Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS son
 - Couverture et recette : `../MODE_SOMBRE.md`. Impression claire maintenue, PDF indépendants. Aucun changement métier ou de permission.
 - Vérification : 12 tests ciblés réussis (22,704 s), check Django, syntaxe JS et diff sans erreur. 17 paires de texte par palette calculées >=4,5:1 ; focus/bordures de champs >=3:1 sur surface. Préférence, stockage et synchronisation vérifiés en VM Node. Ces contrôles ne prouvent pas le rendu navigateur du mode sombre.
 - Prochaine vérification : sélectionner Sombre en pied de page et examiner les familles de pages aux quatre largeurs, puis l'aperçu d'impression. Recette générale et objectif caisse de 30 secondes toujours non validés.
+
+## Reprise QA — lot 1, 30 octobre 2026
+
+- Lecture du code : `forms.js` ne traite que les POST ; contrairement à l'hypothèse initiale, il ne met pas le GET du dashboard en noValidate. Aucun changement applicatif déduit des traces encore insuffisantes.
+- Nouveaux fichiers/modifications de test : `tools/ux_lot1_diagnose.cjs`, option `--diagnose-lot1` de `tools/run_ux_review.py`. Captures/JSON propres à chaque tentative ; aucune dépendance ajoutée.
+- Tentative de diagnostic réellement exécutée : socket refusée avant navigateur, rapport `/tmp/pharmagest-ux-report-ghyjmdhn`. Les douze reproductions restent non exécutées ; attendre le rapport du poste utilisateur. Lots 2 à 7 non terminés ; lot 8 non autorisé et non commencé.
+
+Vérification actuelle sur la copie `fix/recette-frontend` : **85 tests Django réussis en 158,053 s**, check Django sans anomalie, `makemigrations --check --dry-run` sans changement, **12 tests cashier_math + 9 tests operation_math réussis**, syntaxe Node et compilation Python valides. Préparation : **45 rendus serveur**. Ces résultats ne valident pas les douze cas navigateur non exécutés. Commit de test : `a83f1df`. La branche sera transférable par bundle local ; aucun merge ni push effectué et main du dépôt actif préservé.
