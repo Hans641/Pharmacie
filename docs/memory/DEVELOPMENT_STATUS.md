@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière vérification : **30 octobre 2026**. Code analysé à `main` / `c3026db` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
+Dernière vérification : **30 octobre 2026**. Reprise UI à `main` / `14c7c6d` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -32,7 +32,7 @@ Les tests PDF vérifient notamment réponse, type et signature ; ils ne prouvent
 
 ## Dernière étape et travail actuel
 
-La refonte caisse est commitée (`c6ec3c6`) et fusionnée (`c3026db`). L’itération précédente formulaires/opérations est fusionnée (`6a5426f`). La mémoire persistante est créée. Reprise UI : clarification du tableau de bord (temporalité, navigation interne, filtres et limites des aperçus) dans le template et le CSS uniquement ; voir `../RECETTE_DASHBOARD.md`. Le commit et la fusion sont autorisés pour cette tâche. Préparation en copie isolée, car la création de branche dans le dépôt actif échoue (`.git` en lecture seule). Application à `main` à confirmer après exécution du finaliseur côté utilisateur ; aucun push prévu.
+La refonte caisse est fusionnée (`c3026db`), puis la mémoire et le dashboard (`14c7c6d`). Cette dernière fusion est désormais confirmée dans le dépôt actif ; la référence locale `origin/main` lui est identique lors de la reprise (aucune interrogation distante). La tentative de push précédente par l'agent a échoué sur la résolution DNS ; ne pas en déduire une publication distante vérifiée. L'itération actuelle améliore la présentation des stocks et des lots, sans modification de vue, modèle, service ou migration. Aucun commit ou push effectué pour cette nouvelle tâche.
 
 ## Prochaines étapes prioritaires
 
@@ -59,3 +59,11 @@ Pas de multi-tenant, SaaS rizicole, paiement partiel, intégration prestataire, 
 - Intégration préparée sur `feat/dashboard-clarity` dans une copie isolée, avec fusion sans fast-forward. Le bundle et le finaliseur sous `.publication/` sont locaux et ignorés. Ils ne signifient pas que le dépôt actif ou GitHub a été modifié. Référence du dépôt actif lors de la préparation : `c3026db`.
 
 Validation finale de cette itération : **82 tests Django réussis en 153,801 s**, **21 tests JS réussis**, `manage.py check` sans anomalie, `makemigrations --check --dry-run` sans changement, `node --check tools/ux_browser_check.cjs` et `git diff --check` réussis. Recette navigateur non validée pour les raisons ci-dessus.
+
+## Stocks et lots — 30 octobre 2026
+
+- Libellés visibles, filtres rapides conservant la recherche et retirant la page, compte filtré et tri explicite. Aide native sur stock physique, disponibilité et cumul des états.
+- Lots épuisés et lots bloqués/périmés explicités ; liens médicament et inventaire soumis aux permissions. États vides avec action de réinitialisation.
+- Fichiers et recette : `../RECETTE_STOCKS.md`. Aucun tri global supplémentaire ni persistance hors URL ajouté. Recette navigateur aux quatre largeurs toujours à réaliser.
+
+Vérification stocks : **15 tests ciblés réussis (28,454 s)**, check Django et `git diff --check` sans erreur. La suite complète de 82 tests mentionnée plus haut concerne l'itération dashboard ; trois tests stocks s'y ajoutent, sans nouveau passage complet attesté.

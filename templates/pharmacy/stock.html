@@ -1,12 +1,32 @@
 {% extends 'base.html' %}{% load ui %}
 {% block content %}
-<div class="page-heading"><div><div class="eyebrow">Traçabilité</div><h1>Stocks et lots</h1><p>Stock physique par lot, présenté dans l’ordre des péremptions.</p></div>{% if perms.pharmacy.view_stockmovement %}<a class="btn" href="{% url 'movements' %}">{% icon 'history' %} Mouvements de stock</a>{% endif %}</div>
-<section class="panel">
-  <form class="filters" method="get" data-live-search><label class="visually-hidden" for="stock-search">Médicament, code-barres ou lot</label><input class="form-control search" id="stock-search" name="q" value="{{ request.GET.q }}" placeholder="Médicament, code-barres ou lot"><select name="status" class="form-control" aria-label="État du lot"><option value="">Tous les lots</option><option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Disponibles</option><option value="soon" {% if request.GET.status == 'soon' %}selected{% endif %}>Péremption sous 90 jours</option><option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Périmés</option><option value="blocked" {% if request.GET.status == 'blocked' %}selected{% endif %}>Bloqués</option></select><button class="btn" type="submit">{% icon 'search' %} Rechercher</button></form>
+<div class="page-heading"><div><div class="eyebrow">Traçabilité</div><h1>Stocks et lots</h1><p>Repérez les lots à surveiller.{% if perms.pharmacy.adjust_stock %} Ouvrez un inventaire pour compter ou bloquer un lot.{% endif %}</p></div>{% if perms.pharmacy.view_stockmovement %}<a class="btn" href="{% url 'movements' %}">{% icon 'history' %} Mouvements de stock</a>{% endif %}</div>
+<section class="panel stock-panel" aria-label="Recherche et suivi des lots">
+  <form class="filters stock-filters" method="get" data-live-search>
+    <label for="stock-search">Rechercher un lot<input class="form-control search" id="stock-search" name="q" value="{{ request.GET.q }}" placeholder="Médicament, code-barres ou lot" aria-describedby="stock-search-help"></label>
+    <label for="stock-status">État du lot<select id="stock-status" name="status" class="form-control"><option value="">Tous les lots</option><option value="available" {% if request.GET.status == 'available' %}selected{% endif %}>Disponibles</option><option value="soon" {% if request.GET.status == 'soon' %}selected{% endif %}>Péremption sous 90 jours</option><option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Périmés</option><option value="blocked" {% if request.GET.status == 'blocked' %}selected{% endif %}>Bloqués</option></select></label>
+    <button class="btn btn-primary" type="submit">{% icon 'search' %} Rechercher</button>
+  </form>
+  <p class="stock-help" id="stock-search-help">Recherche dans tous les lots. Les filtres sont conservés dans l’adresse de la page.</p>
+  <details class="stock-guide"><summary>{% icon 'info' %} Comprendre les états et les quantités</summary><div>
+    <p><strong>Stock physique :</strong> unités enregistrées, y compris celles des lots bloqués ou périmés. Un lot à zéro unité est épuisé.</p>
+    <p><strong>Disponibles :</strong> lots non bloqués, non périmés et avec un stock positif. L’autorisation du médicament et les contrôles de délivrance restent vérifiés à la caisse.</p>
+    <p><strong>Sous 90 jours :</strong> échéance comprise entre aujourd’hui et 90 jours inclus. Un lot peut aussi être bloqué ; les deux états sont affichés.</p>
+  </div></details>
   {% include 'includes/search_loading.html' %}
-  <div data-list-results>{% filter_chips %}
-    <div class="table-wrap"><table class="responsive-table" role="table"><caption class="visually-hidden">Stock physique par médicament et lot</caption><thead><tr><th scope="col">Médicament</th><th scope="col">Lot</th><th scope="col">Péremption</th><th scope="col" class="num">Stock physique</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead><tbody>
-    {% for l in page_obj %}<tr><td data-label="Médicament"><strong>{{ l.medicine }}</strong></td><td data-label="Lot">{{ l.number }}</td><td data-label="Péremption">{{ l.expires_on|date:'d/m/Y' }}</td><td data-label="Stock physique" class="num">{{ l.quantity }} unités</td><td data-label="État"><div>{% include 'includes/lot_status.html' with lot=l %}</div></td><td data-label="Actions">{% if perms.pharmacy.adjust_stock %}<details class="row-actions"><summary>{% icon 'more' %} Actions</summary><div><a href="{% url 'inventory' l.pk %}">Inventaire / blocage</a></div></details>{% else %}<span class="muted">Consultation</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty" colspan="6"><strong>Aucun lot trouvé.</strong><p>Modifiez les filtres{% if perms.pharmacy.receive_purchase %} ou réceptionnez une commande{% endif %}.</p>{% if perms.pharmacy.view_purchase %}<a class="btn" href="{% url 'purchases' %}">Voir les commandes</a>{% endif %}</td></tr>{% endfor %}
+  <div data-list-results>
+    {% include 'includes/stock_status_filters.html' %}
+    {% filter_chips %}
+    <div class="stock-results-heading"><h2>{{ page_obj.paginator.count }} lot{{ page_obj.paginator.count|pluralize }} trouvé{{ page_obj.paginator.count|pluralize }}</h2><span class="muted">Tri : péremption la plus proche d’abord</span></div>
+    <div class="table-wrap"><table class="responsive-table" role="table"><caption class="visually-hidden">Stock physique par médicament et lot, par date de péremption croissante</caption><thead><tr><th scope="col">Médicament</th><th scope="col">Lot</th><th scope="col">Péremption</th><th scope="col" class="num">Stock physique</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead><tbody>
+    {% for l in page_obj %}<tr>
+      <td data-label="Médicament"><strong>{% if perms.pharmacy.view_medicine %}<a href="{% url 'entity_detail' 'medicaments' l.medicine_id %}">{{ l.medicine }}</a>{% else %}{{ l.medicine }}{% endif %}</strong></td>
+      <td data-label="Lot"><span class="stock-lot-number">{{ l.number }}</span></td>
+      <td data-label="Péremption">{{ l.expires_on|date:'d/m/Y' }}</td>
+      <td data-label="Stock physique" class="num"><div><strong>{{ l.quantity }} unité{{ l.quantity|pluralize }}</strong>{% if l.quantity == 0 %}<small>Lot épuisé</small>{% elif l.blocked or l.expired %}<small>Exclu de la vente</small>{% endif %}</div></td>
+      <td data-label="État"><div class="stock-statuses">{% include 'includes/lot_status.html' with lot=l %}</div></td>
+      <td data-label="Actions">{% if perms.pharmacy.adjust_stock %}<details class="row-actions"><summary aria-label="Actions pour le lot {{ l.number }} de {{ l.medicine }}">{% icon 'more' %} Actions</summary><div><a href="{% url 'inventory' l.pk %}">Inventaire / blocage</a></div></details>{% else %}<span class="muted">Consultation</span>{% endif %}</td>
+    </tr>{% empty %}<tr><td class="empty" colspan="6"><strong>Aucun lot trouvé.</strong><p>{% if request.GET.q or request.GET.status %}Essayez un autre nom, un numéro de lot ou retirez les filtres.{% else %}Les lots apparaissent après la réception d’une commande.{% endif %}</p><div class="actions">{% if request.GET.q or request.GET.status %}<a class="btn" href="{% url 'stock' %}">Afficher tous les lots</a>{% endif %}{% if perms.pharmacy.view_purchase %}<a class="btn" href="{% url 'purchases' %}">Voir les commandes</a>{% endif %}</div></td></tr>{% endfor %}
     </tbody></table></div>{% include 'pharmacy/pagination.html' %}
   </div>
 </section>

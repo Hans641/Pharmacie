@@ -1,0 +1,8 @@
+{% load ui %}
+<nav class="stock-status-filters" aria-label="Filtres rapides des lots">
+  <a href="{% querystring status=None page=None %}" {% if not request.GET.status %}aria-current="page"{% endif %}>Tous les lots</a>
+  <a href="{% querystring status='available' page=None %}" {% if request.GET.status == 'available' %}aria-current="page"{% endif %}>{% icon 'check' %} Disponibles</a>
+  <a href="{% querystring status='soon' page=None %}" {% if request.GET.status == 'soon' %}aria-current="page"{% endif %}>{% icon 'clock' %} Sous 90 jours</a>
+  <a href="{% querystring status='expired' page=None %}" {% if request.GET.status == 'expired' %}aria-current="page"{% endif %}>{% icon 'warning' %} Périmés</a>
+  <a href="{% querystring status='blocked' page=None %}" {% if request.GET.status == 'blocked' %}aria-current="page"{% endif %}>{% icon 'lock' %} Bloqués</a>
+</nav>

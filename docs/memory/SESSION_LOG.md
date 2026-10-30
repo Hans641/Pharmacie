@@ -47,3 +47,12 @@ Conserver ici les jalons et preuves, sans secrets ni copie des échanges. Les da
 
 - Validation finale après correction du test : suite complète **82 tests Django réussis (153,801 s)** ; **12 tests cashier_math + 9 tests operation_math réussis** ; check Django, vérification des migrations, syntaxe du script navigateur et diff sans erreur.
 - Commits mémoire et UI, puis fusion sans fast-forward, préparés sur `feat/dashboard-clarity` dans une copie isolée. Empreintes et identifiants disponibles dans `.publication/dashboard-merge-manifest.json` ; application au dépôt actif via `.publication/finaliser-dashboard.py` depuis le terminal utilisateur. Le code métier reste inchangé.
+
+## 30 octobre 2026 — Interface des stocks et lots
+
+- Reprise à main `14c7c6d` : fusion dashboard confirmée, référence locale origin/main identique ; pas de vérification distante. Échec DNS du push précédent de l'agent conservé comme fait historique.
+- Inspection du template stock, du filtre serveur, de l'ordre du modèle Lot, des badges, de la recherche progressive et des tests existants. Menus de ligne, badges et cartes mobiles déjà présents, donc conservés.
+- Ajout de filtres rapides préservant la recherche et réinitialisant la page, libellés visibles, compte filtré, tri annoncé, aide dépliable, mentions lot épuisé/exclu de la vente, liens de fiche selon permission et réinitialisation après absence de résultat. Sprite et CSS locaux complétés.
+- Trois tests ajoutés : conservation de recherche/pagination des raccourcis, états cumulés et quantité zéro, liens interdits absents pour un lecteur de lots sans autre permission.
+- Vérification : 15 tests Django ciblés réussis (28,454 s), couvrant StockClarityTests, PresentationTests et le rendu des pages principales ; check Django sans anomalie, diff sans erreur. Suite complète non réexécutée : modification de présentation seulement, aucune vue/service/modèle/migration modifié. Recette navigateur toujours à effectuer, voir RECETTE_STOCKS.
+- Aucun commit, merge ou push pour cette itération. Prochaine étape : recette stocks aux quatre largeurs, puis cohérence des listes restantes selon les constats.

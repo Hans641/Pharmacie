@@ -503,3 +503,73 @@ class DashboardPeriodTests(Fixtures, TestCase):
                 else:
                     self.assertNotContains(response, 'href="#dashboard-stock"')
                     self.assertNotContains(response, 'Ouvrir une vente comptoir')
+
+
+class StockClarityTests(Fixtures, TestCase):
+    def setUp(self):
+        self.make_data()
+        self.client.force_login(self.user)
+
+    def test_quick_filters_keep_search_and_reset_pagination(self):
+        from django.utils.html import escape
+        from urllib.parse import parse_qs, urlsplit
+        from html.parser import HTMLParser
+
+        class FilterLinks(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.inside = False
+                self.links = []
+
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == 'nav' and attrs.get('class') == 'stock-status-filters':
+                    self.inside = True
+                if tag == 'a' and self.inside:
+                    self.links.append(attrs)
+
+            def handle_endtag(self, tag):
+                if tag == 'nav':
+                    self.inside = False
+
+        response = self.client.get('/stocks/', {'q': 'Produit & lot', 'status': 'blocked', 'page': '2'})
+        parser = FilterLinks()
+        parser.feed(response.content.decode())
+        self.assertEqual(len(parser.links), 5)
+        for link in parser.links:
+            params = parse_qs(urlsplit(link['href']).query)
+            self.assertEqual(params['q'], ['Produit & lot'])
+            self.assertNotIn('page', params)
+            self.assertContains(response, escape(link['href']))
+        active = [link for link in parser.links if link.get('aria-current') == 'page']
+        self.assertEqual(len(active), 1)
+        self.assertEqual(parse_qs(urlsplit(active[0]['href']).query)['status'], ['blocked'])
+        self.assertContains(response, 'Afficher tous les lots')
+
+    def test_expired_blocked_and_empty_lots_are_not_presented_as_sellable(self):
+        lot = self.received()
+        lot.expires_on = timezone.localdate() - timedelta(days=1)
+        lot.blocked = True
+        lot.save()
+        response = self.client.get('/stocks/')
+        self.assertContains(response, 'Exclu de la vente')
+        self.assertContains(response, 'Bloqué')
+        self.assertContains(response, 'Périmé')
+        lot.quantity = 0
+        lot.save()
+        response = self.client.get('/stocks/')
+        self.assertContains(response, 'Lot épuisé')
+        self.assertNotContains(response, 'Exclu de la vente')
+        self.assertContains(response, '1 lot trouvé')
+
+    def test_lot_reader_does_not_get_catalogue_or_inventory_links(self):
+        from django.contrib.auth.models import Permission
+        lot = self.received()
+        self.other.user_permissions.add(Permission.objects.get(content_type__app_label='pharmacy', codename='view_lot'))
+        self.client.force_login(self.other)
+        response = self.client.get('/stocks/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Consultation')
+        self.assertNotContains(response, f'href="/catalogue/medicaments/{self.med.pk}/"')
+        self.assertNotContains(response, f'href="/stocks/{lot.pk}/inventaire/"')
+        self.assertNotContains(response, 'Voir les commandes')
