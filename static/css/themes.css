@@ -1,0 +1,105 @@
+/* Thèmes communs à toutes les pages utilisant base.html.
+   Les préférences manuelles priment sur le système. Impression exclue. */
+.theme-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.theme-control select { min-height: 44px; min-width: 120px; padding: 8px 12px; border: 1px solid var(--field-border); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font-size: 14px; }
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --green: #8be0b7;
+    --green-dark: #b2f2d1;
+    --ink: #e6f0eb;
+    --muted: #b0c3b9;
+    --bg: #101916;
+    --surface: #192720;
+    --surface-soft: #23372c;
+    --line: #4b6657;
+    --success: #99e6b7;
+    --success-bg: #203d2c;
+    --warning: #ffda91;
+    --warning-bg: #40331c;
+    --danger: #ffb4b4;
+    --danger-bg: #452729;
+    --info: #acd9ff;
+    --info-bg: #203749;
+    --focus: #aacfff;
+    --primary-bg: #94e6bc;
+    --primary-hover: #b2f2d1;
+    --on-primary: #10231a;
+    --control-border: #799687;
+    --field-border: #799687;
+    --nav-ink: #d0e1d7;
+    --nav-selected: #294a38;
+    --button-ink: #d0e1d7;
+    --badge-ink: #d0e1d7;
+    --placeholder: #b0c3b9;
+    --table-head: #23372c;
+    --table-head-ink: #d0e1d7;
+    --table-ink: #e6f0eb;
+    --table-hover: #22372c;
+    --chip-border: #799687;
+    --warning-border: #c79b4e;
+    --danger-border: #ce8585;
+    --success-border: #75b38d;
+    --kbd-bg: #23372c;
+    --kbd-border: #799687;
+    --skeleton: #577f9c;
+    --shadow: 0 8px 28px rgb(0 0 0 / 28%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --green: #8be0b7;
+    --green-dark: #b2f2d1;
+    --ink: #e6f0eb;
+    --muted: #b0c3b9;
+    --bg: #101916;
+    --surface: #192720;
+    --surface-soft: #23372c;
+    --line: #4b6657;
+    --success: #99e6b7;
+    --success-bg: #203d2c;
+    --warning: #ffda91;
+    --warning-bg: #40331c;
+    --danger: #ffb4b4;
+    --danger-bg: #452729;
+    --info: #acd9ff;
+    --info-bg: #203749;
+    --focus: #aacfff;
+    --primary-bg: #94e6bc;
+    --primary-hover: #b2f2d1;
+    --on-primary: #10231a;
+    --control-border: #799687;
+    --field-border: #799687;
+    --nav-ink: #d0e1d7;
+    --nav-selected: #294a38;
+    --button-ink: #d0e1d7;
+    --badge-ink: #d0e1d7;
+    --placeholder: #b0c3b9;
+    --table-head: #23372c;
+    --table-head-ink: #d0e1d7;
+    --table-ink: #e6f0eb;
+    --table-hover: #22372c;
+    --chip-border: #799687;
+    --warning-border: #c79b4e;
+    --danger-border: #ce8585;
+    --success-border: #75b38d;
+    --kbd-bg: #23372c;
+    --kbd-border: #799687;
+    --skeleton: #577f9c;
+    --shadow: 0 8px 28px rgb(0 0 0 / 28%);
+    }
+  }
+  /* Bootstrap fournit des fonds et SVG de contrôles indépendants du thème. */
+  .form-control:focus { color: var(--ink); background-color: var(--surface); border-color: var(--focus); }
+  .form-control:disabled, .form-control[readonly] { background-color: var(--surface-soft); color: var(--muted); opacity: 1; }
+  .form-check-input { background-color: var(--surface); border-color: var(--field-border); }
+  .form-check-input:checked { background-color: #126749; border-color: var(--green); }
+  input, select, textarea { accent-color: var(--green); }
+  input::file-selector-button { color: var(--ink); background: var(--surface-soft); border: 0; border-right: 1px solid var(--field-border); padding: 8px 12px; }
+  meter { accent-color: var(--green); }
+  meter::-webkit-meter-bar { background: var(--surface-soft); border-color: var(--line); }
+  meter::-webkit-meter-optimum-value { background: var(--green); }
+  meter::-moz-meter-bar { background: var(--green); }
+  .btn-danger:hover { color: var(--danger); background: var(--danger-bg); border-color: var(--danger); }
+  .btn-primary:active, .btn-primary:focus-visible { color: var(--on-primary); background: var(--primary-hover); border-color: var(--primary-hover); }
+}

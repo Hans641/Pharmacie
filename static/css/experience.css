@@ -46,7 +46,7 @@
   padding: 12px;
   background: var(--surface);
   color: var(--ink);
-  border: 1px solid #738c7c;
+  border: 1px solid var(--control-border);
   border-radius: 8px;
   text-align: left;
   font-size: 14px;
@@ -110,7 +110,7 @@
 .search-loading { display: flex; align-items: center; gap: 16px; padding: 16px 24px; background: var(--info-bg); color: var(--info); border-bottom: 1px solid var(--line); }
 .loading-copy { font-size: 14px; font-weight: 600; }
 .loading-bars { flex: 1; display: grid; gap: 6px; max-width: 200px; }
-.skeleton-line { display: block; height: 8px; border-radius: 4px; background: #c1d6e5; }
+.skeleton-line { display: block; height: 8px; border-radius: 4px; background: var(--skeleton); }
 .skeleton-line:last-child { width: 65%; }
 [data-list-results][aria-busy="true"]::before { content: none; }
 

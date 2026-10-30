@@ -1,6 +1,6 @@
 # Recette UX, accessibilité et non-régression
 
-## Vérifications exécutées
+## Vérifications historiques de la première refonte
 
 - **56 tests Django réussis**, dont les 45 existants et 11 contrats de présentation supplémentaires.
 - `manage.py check` : aucune anomalie.
@@ -13,6 +13,49 @@
 **Non exécuté :** recette réelle de Chromium, captures aux quatre largeurs, essais au lecteur d’écran et chronométrage de vente. Le navigateur échoue au démarrage dans l’environnement restreint (`Operation not permitted`). La suite Django vérifie le HTML et les droits, pas la géométrie, le rendu CSS ou l’exécution du JavaScript. Aucune conformité WCAG complète n’est revendiquée.
 
 Les cases suivantes constituent un plan à exécuter ; elles ne sont pas précochées.
+
+## Lancement autonome sur données isolées — 30 octobre 2026
+
+Depuis la racine du projet :
+
+```bash
+.venv/bin/python tools/run_ux_review.py
+```
+
+Le lanceur crée une base SQLite neuve et des médias temporaires, applique les migrations dans cette base uniquement, prépare cinq comptes et démarre son propre serveur sur un port local libre. Il ignore le `DATABASE_PATH` hérité. Les comptes, leur mot de passe aléatoire et la base temporaire ne sont pas conservés après la fin du processus. Les journaux du serveur sont désactivés ; la sortie du seed affichant normalement un mot de passe reste en mémoire.
+
+Les données comprennent : stock faible, lot bloqué, lot épuisé, lot périmé, péremption proche, médicament et identité longs, commande partiellement reçue, vente validée et paniers fictifs avec ordonnance requise. Les services métier sont utilisés pour préparer les réceptions, inventaires et paniers. Le script navigateur ne soumet pas les opérations métier.
+
+Un dossier neuf `/tmp/pharmagest-ux-report-…` conserve `summary.json`, les journaux par rôle et les captures. Il est annoncé à la fin, même en cas d'échec. La base temporaire est nettoyée sur succès ou erreur gérée ; après une interruption brutale, ne jamais utiliser ses éventuels restes comme base de travail.
+
+Options :
+
+```bash
+# Vérifier les données et les rendus serveur, sans navigateur ni serveur réseau
+.venv/bin/python tools/run_ux_review.py --prepare-only
+# Limiter la recette navigateur à un rôle
+.venv/bin/python tools/run_ux_review.py --role caissier
+# Choisir un dossier de résultats neuf
+.venv/bin/python tools/run_ux_review.py --output /tmp/recette-pharmagest-session
+```
+
+Prérequis navigateur : Node, Playwright et Chrome/Chromium. Le lanceur réutilise `PLAYWRIGHT_MODULE_PATH`, une installation Node locale ou le package Playwright du cache Go s'il existe. Il détecte `google-chrome` installé ; aucun téléchargement automatique. Si Playwright manque :
+
+```bash
+npm install --prefix /tmp/pharmagest-browser playwright
+PLAYWRIGHT_MODULE_PATH=/tmp/pharmagest-browser/node_modules/playwright CHROME_PATH=/usr/bin/google-chrome .venv/bin/python tools/run_ux_review.py
+```
+
+Adapter `CHROME_PATH` au navigateur installé. Une erreur de prérequis ou de lancement ne signifie pas que l'interface a passé la recette. Les nouvelles assertions navigateur doivent encore être exécutées sur la machine hôte.
+
+### Résultats réellement observés dans l'environnement de l'agent
+
+- Préparation isolée : **45 rendus serveur réussis pour les cinq rôles**. Un chemin `DATABASE_PATH` hérité pointant vers une sentinelle est ignoré ; sentinelle inchangée. Empreintes de la base active et des médias identiques avant/après ce contrôle.
+- Chrome direct : échec `setsockopt: Operation not permitted`, avant rendu.
+- Lanceur en mode navigateur : échec à l'ouverture du serveur local (`Operation not permitted`). Rapport d'échec produit ; aucun contrôle navigateur réussi déduit de cette tentative.
+- Le script prévoit désormais les captures et débordements aux quatre largeurs avec et sans JS, le lien d'évitement au clavier, la boucle Tab/Maj+Tab du tiroir et les captures de menu ouvert. En cas de défaut après lancement, `echec.png` et `echec.json` complètent les résultats partiels.
+
+Un statut `preparation_ok` valide seulement les données et les réponses serveur. `automated_checks_ok` indique que les assertions navigateur ont passé ; l'examen visuel des captures, le lecteur d'écran, les contrastes complets, le zoom et le chronométrage restent manuels. Aucune certification WCAG n'est déduite de ces statuts.
 
 ## Préparation
 
@@ -165,3 +208,19 @@ Pour un caissier, retirer `/achats/` de `UX_ROUTES`. Pour un gestionnaire de sto
 ## Évolutions différées
 
 Tendances KPI et séries temporelles réellement calculées côté serveur ; tri serveur global supplémentaire ; actions en masse avec prévisualisation et droits adaptés ; thème sombre complet ; lecteur de code-barres caméra ; raccourcis personnalisables ; mode hors ligne avec stratégie de synchronisation des stocks et paiements.
+
+## Non-régression lors de la préparation du lanceur
+
+Le 30 octobre 2026 : 85 tests Django réussis (158,444 s), 21 tests JS réussis, check Django sans anomalie, compilation du lanceur Python et syntaxe du script Node valides. Aucun changement de code métier ou de template applicatif dans cette étape. Ces résultats ne remplacent pas les cases de recette navigateur laissées à vérifier ci-dessus.
+
+## Premier passage navigateur sur l'hôte — 30 octobre 2026
+
+Rapport fourni : `/tmp/pharmagest-ux-report-sn78_rcg`. Pour l'administrateur, les 11 pages prévues à 360 px et le dashboard à 768 px passent les assertions avec JS ; arrêt au catalogue à 768 px. Les autres largeurs, rôles et le repli sans JS ne sont pas validés par ce passage.
+
+La capture `administrateur/echec.png` montre des colonnes comprimées (noms, badges et actions coupés lettre par lettre). Le contrôle signalait également des liens Modifier/Archiver appartenant à des menus fermés : leurs rectangles ne prouvaient pas leur visibilité.
+
+Corrections : largeur minimale du catalogue au-dessus de 600 px avec défilement dans le conteneur, noms de produit lisibles, mots des badges et menus préservés ; actions sur une colonne en cartes mobiles. Le contrôle ignore désormais les descendants masqués des details fermés et vérifie séparément le premier menu ouvert au clavier, les dimensions de ses liens et l'absence de débordement de page. Aucun seuil tactile abaissé. Nouvelle exécution navigateur nécessaire après ces corrections. Le 404 favicon n'est pas l'assertion qui a interrompu ce passage.
+
+### Retour hôte z_0k5lok — 30 octobre 2026
+
+Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS sont enregistrés comme réussis pour l'administrateur (11 à 360 px, neuf à 768 px). Arrêt sur la création de médicament : le scénario attend le champ prix alors que la capture montre toujours Identification. Cause exacte du non-avancement non démontrée. Le scénario active maintenant Continuer au clavier et vérifie l'étape atteinte, avec restitution des messages inline si elle reste bloquée. Aucun changement de validation applicative. Syntaxe Node et diff vérifiés ; nouvelle exécution hôte requise, les autres rôles et le sans-JS restent non validés.

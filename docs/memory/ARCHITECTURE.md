@@ -70,3 +70,7 @@ Les variables sont lues par `os.environ` ; `.env` n’est pas chargé automatiqu
 ## Multi-tenant
 
 **Absent.** Une configuration de pharmacie et une base commune, sans modèle Tenant/Organisation, identifiant de tenant ni middleware d’isolation. Les permissions sont globales à l’installation. Ne pas déployer cette architecture comme SaaS multi-tenant sans conception explicite et tests d’isolation.
+
+### Thèmes partagés (30 octobre 2026)
+
+`base.html` charge le petit script local `theme.js` en tête, puis `themes.css` après les styles de composants. Les palettes utilisent les tokens communs ; seul `pharmagest-theme` est mémorisé côté navigateur. Sans JS, `prefers-color-scheme` détermine la palette. Un sélecteur natif partagé en pied de page permet la préférence manuelle. Les variables sombres sont restreintes à l'écran, l'impression et les PDF restant indépendants.
