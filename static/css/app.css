@@ -389,3 +389,27 @@ dialog .actions { justify-content: flex-end; }
   .dashboard-sections { gap: var(--space-2); }
   .dashboard-sections a { flex: 1 1 auto; justify-content: center; }
 }
+
+/* Stocks : filtres conservés dans l'URL et états indépendants du stock physique. */
+.stock-filters label { display: grid; gap: var(--space-2); }
+.stock-filters label:first-child { flex: 2 1 260px; }
+.stock-filters .form-control { width: 100%; }
+.stock-help { padding: var(--space-3) var(--space-6); margin: 0; color: var(--muted); font-size: var(--text-sm); }
+.stock-guide { margin: 0 var(--space-6) var(--space-4); padding: var(--space-2) var(--space-4); background: var(--surface-soft); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.stock-guide summary { min-height: 44px; padding: var(--space-2) 0; cursor: pointer; font-weight: 650; }
+.stock-guide p { margin: var(--space-3) 0; font-size: var(--text-sm); }
+.stock-status-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-4) var(--space-6); border-top: 1px solid var(--line); }
+.stock-status-filters a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: var(--space-2) var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-sm); text-decoration: none; font-size: var(--text-sm); font-weight: 650; }
+.stock-status-filters a[aria-current="page"] { color: var(--surface); background: var(--green); border-color: var(--green); text-decoration: underline; text-underline-offset: 4px; }
+.stock-results-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); padding: var(--space-4) var(--space-6); }
+.stock-results-heading h2 { margin: 0; }
+.stock-lot-number { overflow-wrap: anywhere; }
+.stock-statuses { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.stock-panel td strong a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+.stock-panel .empty .actions { justify-content: center; }
+@media (max-width: 600px) {
+  .stock-guide { margin-left: var(--space-4); margin-right: var(--space-4); }
+  .stock-help, .stock-status-filters, .stock-results-heading { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .stock-status-filters a { flex: 1 1 130px; justify-content: center; }
+  .stock-panel td strong a { max-width: 100%; }
+}

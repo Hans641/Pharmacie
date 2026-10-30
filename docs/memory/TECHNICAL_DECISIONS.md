@@ -35,3 +35,7 @@ Ces contraintes sont historiques, pas des hypothèses permanentes sur les future
 ## 30 octobre 2026 — Temporalité du dashboard
 
 Séparer visuellement les alertes/indicateurs actuels de l’analyse datée. Réutiliser le formulaire GET et le contexte existant ; aucune comparaison de tendance sans données correspondantes. Navigation par ancres et filtres natifs utilisables sans JavaScript. Conséquence : amélioration limitée à la présentation, sans nouveau calcul métier.
+
+## 30 octobre 2026 — Lecture des stocks
+
+Conserver le filtre GET serveur et le tri `expires_on, pk` ; les raccourcis de statut gardent la recherche et retirent la page. Distinguer quantité physique, péremption et blocage sans créer de nouveau calcul de disponibilité : les contrôles de délivrance restent à la caisse. Pas de stockage navigateur, de tri local trompeur ni de nouvelle vue. Aide en `details` natif et permissions existantes préservées.
