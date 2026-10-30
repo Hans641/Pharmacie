@@ -3,11 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
+  <script src="{% static 'js/theme.js' %}"></script>
   <title>{% block page_title %}{{ title|default:'Bienvenue' }}{% endblock %} · PharmaGest</title>
   <link rel="stylesheet" href="{% static 'css/vendor/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="stylesheet" href="{% static 'css/experience.css' %}">
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}">
   <link rel="stylesheet" href="{% static 'css/print.css' %}" media="print">
   <script src="{% static 'js/forms.js' %}" defer></script>
   <script src="{% static 'js/app.js' %}" defer></script>
@@ -24,7 +26,7 @@
       {% include 'includes/messages.html' %}
       {% block content %}{% endblock %}
     </main>
-    <footer class="page-footer"><span>PharmaGest · {{ pharmacy_name }}</span><span>Montants en ariary (Ar)</span></footer>
+    <footer class="page-footer"><span>PharmaGest · {{ pharmacy_name }}</span><span>Montants en ariary (Ar)</span>{% include 'includes/theme_control.html' %}</footer>
   </div>
   {% include 'includes/confirm_dialog.html' %}
   <p class="visually-hidden" role="status" id="interaction-status"></p>

@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière vérification : **30 octobre 2026**. Reprise UI à `main` / `14c7c6d` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
+Dernière vérification : **30 octobre 2026**. Reprise de recette à `main` / `7c871d3` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -32,7 +32,7 @@ Les tests PDF vérifient notamment réponse, type et signature ; ils ne prouvent
 
 ## Dernière étape et travail actuel
 
-La refonte caisse est fusionnée (`c3026db`), puis la mémoire et le dashboard (`14c7c6d`). Cette dernière fusion est désormais confirmée dans le dépôt actif ; la référence locale `origin/main` lui est identique lors de la reprise (aucune interrogation distante). La tentative de push précédente par l'agent a échoué sur la résolution DNS ; ne pas en déduire une publication distante vérifiée. L'itération actuelle améliore la présentation des stocks et des lots, sans modification de vue, modèle, service ou migration. Aucun commit ou push effectué pour cette nouvelle tâche.
+Caisse, dashboard et stocks sont intégrés ; fusion stocks confirmée à `7c871d3` dans le dépôt actif. La référence locale `origin/main` est identique lors de la reprise ; le push a été déclaré effectué par l'utilisateur, sans vérification distante depuis l'agent. Tâche actuelle réorientée par l'utilisateur : mode sombre commun à toutes les pages, avec préférence système et choix explicite en pied de page. La recette navigateur reste incomplète ; le dernier rapport `6zmmb904` échoue sur un clic de période instable, sans preuve de résolution. Aucun commit, merge ou push demandé pour cette étape.
 
 ## Prochaines étapes prioritaires
 
@@ -67,3 +67,27 @@ Validation finale de cette itération : **82 tests Django réussis en 153,801 s*
 - Fichiers et recette : `../RECETTE_STOCKS.md`. Aucun tri global supplémentaire ni persistance hors URL ajouté. Recette navigateur aux quatre largeurs toujours à réaliser.
 
 Vérification stocks : **15 tests ciblés réussis (28,454 s)**, check Django et `git diff --check` sans erreur. La suite complète de 82 tests mentionnée plus haut concerne l'itération dashboard ; trois tests stocks s'y ajoutent, sans nouveau passage complet attesté.
+
+## Recette responsive/clavier — 30 octobre 2026
+
+- Nouveau lanceur `tools/run_ux_review.py` : cinq rôles, base/médias temporaires, port libre, mot de passe non persistant, rapports conservés ; mode `--prepare-only` sans socket ni navigateur. Documentation dans `../RECETTE_UX.md`.
+- Préparation vérifiée : 45 rendus serveur, DATABASE_PATH hérité ignoré, sentinelle et empreintes base active/médias inchangées.
+- Script navigateur complété : évitement au clavier, boucle Tab/Maj+Tab du tiroir, captures du menu, captures et débordements sans JS aux quatre largeurs, rapport/capture sur échec après lancement.
+- Blocages réellement confirmés : Chrome échoue avant rendu ; le lancement complet échoue également à l'ouverture du serveur local. Aucune réussite visuelle/clavier navigateur revendiquée. Prochaine action : exécuter `.venv/bin/python tools/run_ux_review.py` depuis le terminal hôte, puis examiner résultats et captures et corriger les défauts constatés.
+
+Contrôles de cette session : **85 tests Django réussis (158,444 s)**, **21 tests JS réussis**, check Django, compilation Python, syntaxe du script navigateur et diff sans erreur. Cela ne valide pas les nouvelles assertions Playwright ; exécution sur l'hôte encore nécessaire.
+
+## Premier retour navigateur hôte — 30 octobre 2026
+
+Rapport `sn78_rcg` : 11 pages administrateur à 360 px et dashboard à 768 px passent avec JS ; échec catalogue à 768 px. Capture inspectée : colonnes comprimées et mots morcelés. Faux positifs également constatés sur les liens de menus fermés. CSS du catalogue/cartes et mesure des éléments visibles corrigés ; premier menu ouvert désormais contrôlé. Nouvelle recette hôte attendue ; autres rôles, largeurs et sans JS non validés par ce passage.
+
+### Retour hôte z_0k5lok — 30 octobre 2026
+
+Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS sont enregistrés comme réussis pour l'administrateur (11 à 360 px, neuf à 768 px). Arrêt sur la création de médicament : le scénario attend le champ prix alors que la capture montre toujours Identification. Cause exacte du non-avancement non démontrée. Le scénario active maintenant Continuer au clavier et vérifie l'étape atteinte, avec restitution des messages inline si elle reste bloquée. Aucun changement de validation applicative. Syntaxe Node et diff vérifiés ; nouvelle exécution hôte requise, les autres rôles et le sans-JS restent non validés.
+
+## Mode sombre — 30 octobre 2026
+
+- Thème commun clair/sombre : tokens, surfaces, tableaux, formulaires, états, navigation, caisse, progression, notifications et connexion. Sélecteur Système/Clair/Sombre sur toutes les pages de base ; préférence locale non sensible et synchronisation des onglets. Sans JS : préférence système.
+- Couverture et recette : `../MODE_SOMBRE.md`. Impression claire maintenue, PDF indépendants. Aucun changement métier ou de permission.
+- Vérification : 12 tests ciblés réussis (22,704 s), check Django, syntaxe JS et diff sans erreur. 17 paires de texte par palette calculées >=4,5:1 ; focus/bordures de champs >=3:1 sur surface. Préférence, stockage et synchronisation vérifiés en VM Node. Ces contrôles ne prouvent pas le rendu navigateur du mode sombre.
+- Prochaine vérification : sélectionner Sombre en pied de page et examiner les familles de pages aux quatre largeurs, puis l'aperçu d'impression. Recette générale et objectif caisse de 30 secondes toujours non validés.

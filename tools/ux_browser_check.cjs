@@ -19,9 +19,11 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
   fs.mkdirSync(output, { recursive: true });
   const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) });
   const report = [];
+  let activePage;
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
+    activePage = page;
     const runtimeErrors = [];
     const external = [];
     page.on('pageerror', error => runtimeErrors.push(error.message));
@@ -39,6 +41,16 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
         const layout = await page.evaluate(() => {
           const width = document.documentElement.clientWidth;
           const tooSmall = [...document.querySelectorAll('a,button,summary,input:not([type="hidden"]),select,textarea')].filter(el => {
+            // Chromium peut exposer une géométrie pour le contenu d'un details fermé.
+            // Seul son summary est alors visible et interactif.
+            for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+              if (parent.matches('details:not([open])')) {
+                const summary = parent.querySelector(':scope > summary');
+                if (!summary?.contains(el)) return false;
+              }
+            }
+            const style = getComputedStyle(el);
+            if (style.visibility === 'hidden' || style.visibility === 'collapse') return false;
             let rect = el.getBoundingClientRect();
             if (!el.getClientRects().length || !rect.width || !rect.height || rect.bottom < 0 || el.closest('.visually-hidden')) return false;
             if (el.matches('input[type="radio"],input[type="checkbox"]') && el.labels?.length) rect = el.labels[0].getBoundingClientRect();
@@ -48,9 +60,33 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
         });
         assert(!layout.overflow, `${width}px ${route} : débordement horizontal de page`);
         assert.deepEqual(layout.tooSmall, [], `${width}px ${route} : cibles sous 44 px`);
+        const firstActions = page.locator('.row-actions').first();
+        if (await firstActions.count()) {
+          await firstActions.locator('summary').focus();
+          await page.keyboard.press('Enter');
+          assert(await firstActions.evaluate(el => el.open));
+          for (const link of await firstActions.locator('a').all()) {
+            assert(await link.isVisible());
+            const size = await link.boundingBox();
+            assert(size && size.width >= 43.5 && size.height >= 43.5, `${width}px ${route} : action ouverte sous 44 px`);
+          }
+          assert(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)), `${width}px ${route} : menu d’actions ouvert déborde`);
+          await page.keyboard.press('Enter');
+          assert(!(await firstActions.evaluate(el => el.open)));
+        }
+        await page.locator('.skip-link').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'main-content');
         if (width <= 768) {
           await page.getByRole('button', { name: 'Menu', exact: true }).click();
           assert.equal(await page.locator('#workspace').evaluate(el => el.inert), true);
+          const controls = page.locator('#navigation-panel a:visible, #navigation-panel button:visible');
+          await controls.first().focus();
+          await page.keyboard.press('Shift+Tab');
+          assert(await controls.last().evaluate(el => document.activeElement === el));
+          await page.keyboard.press('Tab');
+          assert(await controls.first().evaluate(el => document.activeElement === el));
+          await page.screenshot({ path: path.join(output, `${width}-${route.replace(/[^a-z0-9]/gi, '_')}-menu.png`), fullPage: true });
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#workspace').evaluate(el => el.inert), false);
           assert.equal(await page.evaluate(() => document.activeElement.hasAttribute('data-nav-open')), true);
@@ -119,7 +155,19 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
         }
         if (await page.locator('form[data-wizard]').count()) {
           const wizard = page.locator('form[data-wizard]');
-          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          const continueWizard = async () => {
+            // L'activation au clavier évite qu'une revalidation au blur déplace
+            // le bouton entre l'appui et le relâchement du pointeur.
+            const next = page.getByRole('button', { name: 'Continuer', exact: true });
+            await next.focus();
+            await next.press('Enter');
+          };
+          const assertStep = async index => {
+            const active = await wizard.locator('[data-wizard-step]').evaluateAll(steps => steps.findIndex(step => !step.hidden));
+            const issues = await wizard.locator('[data-field-feedback]').allTextContents();
+            assert.equal(active, index, `Étape attendue ${index} ; messages : ${issues.filter(Boolean).join(' ; ')}`);
+          };
+          await continueWizard();
           assert.equal(await page.evaluate(() => document.activeElement.id), 'id_name');
           assert(await page.locator('#id_name_feedback').textContent());
           await page.locator('#id_name').fill('Médicament de recette UX');
@@ -131,14 +179,16 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
             name: 'recette.png', mimeType: 'image/png',
             buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZQmcAAAAASUVORK5CYII=', 'base64'),
           });
-          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          await continueWizard();
+          await assertStep(1);
           await page.locator('#id_purchase_price').fill('-1');
           await page.locator('#id_sale_price').fill('15000');
-          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          await continueWizard();
           assert.equal(await page.evaluate(() => document.activeElement.id), 'id_purchase_price');
           assert((await page.locator('#id_purchase_price_feedback').textContent()).includes('0,01'));
           await page.locator('#id_purchase_price').fill('10000');
-          await page.getByRole('button', { name: 'Continuer', exact: true }).click();
+          await continueWizard();
+          await assertStep(2);
           assert.equal((await page.locator('[data-wizard-summary]').textContent()).replace(/\s/g, '').includes('15000,00Ar'), true);
           assert(await page.locator('[data-wizard-submit]').isVisible());
           await page.getByRole('button', { name: 'Précédent', exact: true }).click();
@@ -189,30 +239,37 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
           // Aucun clic sur le bouton final : ni stock, ni retour, ni réception modifiés.
         }
         await page.screenshot({ path: path.join(output, `${width}-${route.replace(/[^a-z0-9]/gi, '_') || 'accueil'}.png`), fullPage: true });
-        report.push({ width, route, status: 'ok' });
+        report.push({ width, route, javascript: true, status: 'ok' });
       }
     }
     // Repli sans JS, après connexion : navigation et formulaires restent disponibles.
     const nativeContext = await browser.newContext({ javaScriptEnabled: false, storageState: await context.storageState(), viewport: { width: 360, height: 1000 } });
     const nativePage = await nativeContext.newPage();
-    for (const route of routes) {
-      assert.equal((await nativePage.goto(base + route)).status(), 200);
-      assert(await nativePage.locator('#navigation-panel').isVisible());
-      if (await nativePage.locator('#dashboard-start').count()) {
-        await nativePage.locator('#dashboard-start').fill('2000-01-01');
-        await nativePage.locator('#dashboard-end').fill('2000-01-31');
-        await Promise.all([nativePage.waitForURL(url => url.searchParams.get('start') === '2000-01-01'), nativePage.getByRole('button', { name: 'Appliquer la période', exact: true }).click()]);
-        assert((await nativePage.locator('#dashboard-period-help').textContent()).includes('01/01/2000 au 31/01/2000'));
-        await Promise.all([nativePage.waitForURL(url => !url.search), nativePage.getByRole('link', { name: 'Mois en cours', exact: true }).click()]);
-      }
-      if (await nativePage.locator('form[data-operation]').count()) {
-        assert.equal(await nativePage.locator('form[data-operation]').evaluate(form => form.noValidate), false);
-        assert(!(await nativePage.locator('[data-operation-preview]').isVisible()));
-      }
-      if (await nativePage.locator('form[data-wizard]').count()) {
-        assert.equal(await nativePage.locator('[data-wizard-step]:visible').count(), 3);
-        assert(await nativePage.locator('[data-wizard-submit]').isVisible());
-        assert.equal(await nativePage.locator('form[data-wizard]').evaluate(form => form.noValidate), false);
+    activePage = nativePage;
+    for (const width of [360, 768, 1280, 1920]) {
+      await nativePage.setViewportSize({ width, height: 1000 });
+      for (const route of routes) {
+        assert.equal((await nativePage.goto(base + route)).status(), 200);
+        assert(await nativePage.locator('#navigation-panel').isVisible());
+        if (await nativePage.locator('#dashboard-start').count()) {
+          await nativePage.locator('#dashboard-start').fill('2000-01-01');
+          await nativePage.locator('#dashboard-end').fill('2000-01-31');
+          await Promise.all([nativePage.waitForURL(url => url.searchParams.get('start') === '2000-01-01'), nativePage.getByRole('button', { name: 'Appliquer la période', exact: true }).click()]);
+          assert((await nativePage.locator('#dashboard-period-help').textContent()).includes('01/01/2000 au 31/01/2000'));
+          await Promise.all([nativePage.waitForURL(url => !url.search), nativePage.getByRole('link', { name: 'Mois en cours', exact: true }).click()]);
+        }
+        if (await nativePage.locator('form[data-operation]').count()) {
+          assert.equal(await nativePage.locator('form[data-operation]').evaluate(form => form.noValidate), false);
+          assert(!(await nativePage.locator('[data-operation-preview]').isVisible()));
+        }
+        if (await nativePage.locator('form[data-wizard]').count()) {
+          assert.equal(await nativePage.locator('[data-wizard-step]:visible').count(), 3);
+          assert(await nativePage.locator('[data-wizard-submit]').isVisible());
+          assert.equal(await nativePage.locator('form[data-wizard]').evaluate(form => form.noValidate), false);
+        }
+        assert(!(await nativePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)), `${width}px ${route} sans JS : débordement horizontal`);
+        await nativePage.screenshot({ path: path.join(output, `${width}-${route.replace(/[^a-z0-9]/gi, '_')}-sans-js.png`), fullPage: true });
+        report.push({ width, route, javascript: false, status: 'ok' });
       }
     }
     await nativeContext.close();
@@ -220,5 +277,13 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
     assert.deepEqual(external, [], 'Ressources distantes détectées');
     fs.writeFileSync(path.join(output, 'resultats.json'), JSON.stringify(report, null, 2));
     console.log(`${report.length} contrôles de page réussis + repli sans JS. Captures : ${output}`);
+  } catch (error) {
+    // Conserver les succès partiels et la page en échec pour permettre la correction.
+    if (activePage && !activePage.isClosed()) {
+      try { await activePage.screenshot({ path: path.join(output, 'echec.png'), fullPage: true }); } catch {}
+    }
+    const message = String(error.message).split(process.env.PHARMAGEST_PASSWORD || '\0').join('[masqué]');
+    fs.writeFileSync(path.join(output, 'echec.json'), JSON.stringify({ status: 'failed', message, completed: report }, null, 2));
+    throw error;
   } finally { await browser.close(); }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });
