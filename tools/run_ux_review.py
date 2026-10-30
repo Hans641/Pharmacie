@@ -126,9 +126,14 @@ class QuietHandler(WSGIRequestHandler):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prepare-only', action='store_true', help='Vérifier les données et rendus serveur sans ouvrir de navigateur.')
+    parser.add_argument('--diagnose-lot1', action='store_true', help='Reproduire les deux échecs avec événements, géométrie et captures.')
     parser.add_argument('--role', choices=['all', 'administrateur', 'pharmacien', 'caissier', 'stock', 'gestion'], default='all')
     parser.add_argument('--output', type=Path, help='Dossier de résultats neuf ; sinon dossier temporaire conservé.')
     args = parser.parse_args()
+    if args.diagnose_lot1 and args.prepare_only:
+        parser.error('--diagnose-lot1 et --prepare-only sont exclusifs.')
+    if args.diagnose_lot1:
+        args.role = 'administrateur'
     # Vérifier les outils avant toute préparation coûteuse, hors mode serveur seul.
     module = None
     if not args.prepare_only:
@@ -141,7 +146,7 @@ def main():
     else:
         output = Path(tempfile.mkdtemp(prefix='pharmagest-ux-report-'))
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    report = {'mode': 'preparation' if args.prepare_only else 'browser', 'status': 'running',
+    report = {'mode': 'preparation' if args.prepare_only else 'lot1-diagnostic' if args.diagnose_lot1 else 'browser', 'status': 'running',
               'revision': revision, 'manual_visual_review': 'pending', 'roles': []}
     try:
         with tempfile.TemporaryDirectory(prefix='pharmagest-ux-data-') as directory:
@@ -172,7 +177,8 @@ def main():
                                 env['PHARMAGEST_SALE_ID'] = str(case['sale_id'])
                             if 'CHROME_PATH' not in env and shutil.which('google-chrome'):
                                 env['CHROME_PATH'] = shutil.which('google-chrome')
-                            result = subprocess.run(['node', str(ROOT / 'tools/ux_browser_check.cjs')], cwd=ROOT, env=env,
+                            script = 'ux_lot1_diagnose.cjs' if args.diagnose_lot1 else 'ux_browser_check.cjs'
+                            result = subprocess.run(['node', str(ROOT / 'tools' / script)], cwd=ROOT, env=env,
                                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
                             (output / (case['role'] + '.log')).write_text(result.stdout.replace(password, '[masqué]'))
                             report['roles'].append(dict(role=case['role'], status='ok' if result.returncode == 0 else 'failed'))
