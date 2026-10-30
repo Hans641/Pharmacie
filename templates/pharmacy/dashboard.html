@@ -1,6 +1,14 @@
 {% extends 'base.html' %}{% load ui %}
 {% block content %}
+<div class="dashboard">
 <div class="page-heading"><div><div class="eyebrow">Votre activité</div><h1>Tableau de bord</h1><p>Bonjour {{ user.first_name|default:user.username }}. Retrouvez les opérations et les points à surveiller.</p></div>{% include 'includes/new_sale_actions.html' %}</div>
+<nav class="dashboard-sections" aria-label="Sections du tableau de bord">
+  <a href="#dashboard-now">Situation actuelle</a>
+  {% if perms.pharmacy.view_sale or perms.pharmacy.view_purchase %}<a href="#dashboard-analysis">Analyse de la période</a>{% endif %}
+  {% if low_stock != None or expiring != None %}<a href="#dashboard-stock">Surveillance du stock</a>{% endif %}
+</nav>
+<section aria-labelledby="dashboard-now" class="dashboard-current">
+<div class="section-heading"><div><h2 id="dashboard-now" tabindex="-1">Situation actuelle</h2><p class="dashboard-caption">Stock disponible et alertes à consulter en priorité. Ces indicateurs ne dépendent pas du filtre de dates.</p></div></div>
 {% if low_count or expired_count or expiring_count %}<div class="alert-links" aria-label="Points à surveiller">
   {% if expired_count %}<a class="alert-link danger" href="{% url 'stock' %}?status=expired">{% icon 'warning' %}<span><strong>{{ expired_count }} lot{{ expired_count|pluralize }} périmé{{ expired_count|pluralize }}</strong><small>Consulter les lots à retirer de la délivrance</small></span></a>{% endif %}
   {% if low_count %}<a class="alert-link" href="{% url 'entity_list' 'medicaments' %}?sort=stock">{% icon 'box' %}<span><strong>{{ low_count }} stock{{ low_count|pluralize }} faible{{ low_count|pluralize }}</strong><small>Voir le catalogue par stock croissant</small></span></a>{% endif %}
@@ -17,15 +25,30 @@
   {% if low_count != None %}<a class="metric" href="{% url 'entity_list' 'medicaments' %}?sort=stock"><span class="metric-icon amber">{% icon 'warning' %}</span><span>Stocks faibles</span><strong>{{ low_count }}</strong><small>Au seuil d’alerte ou en dessous</small></a>{% endif %}
   {% if expiring_count != None %}<a class="metric" href="{% url 'stock' %}?status=soon"><span class="metric-icon rose">{% icon 'clock' %}</span><span>Péremptions proches</span><strong>{{ expiring_count }}</strong><small>Échéance sous 90 jours</small></a>{% endif %}
 </div>
-<div class="section-heading"><h2>Analyse de l’activité</h2><form method="get" class="date-filters"><label>Du <input type="date" name="start" value="{{ start|date:'Y-m-d' }}"></label><label>au <input type="date" name="end" value="{{ end|date:'Y-m-d' }}"></label><button class="btn" type="submit">Appliquer</button></form></div>
+</section>
+{% if perms.pharmacy.view_sale or perms.pharmacy.view_purchase %}
+<section class="dashboard-period" aria-labelledby="dashboard-analysis">
+<div class="section-heading"><div><h2 id="dashboard-analysis" tabindex="-1">Analyse de la période</h2><p class="dashboard-caption" id="dashboard-period-help">Du {{ start|date:'d/m/Y' }} au {{ end|date:'d/m/Y' }}, dates incluses.</p></div></div>
+<form method="get" class="date-filters dashboard-filters" action="#dashboard-analysis" aria-describedby="dashboard-period-help">
+  <label for="dashboard-start">Date de début <input id="dashboard-start" type="date" name="start" value="{{ start|date:'Y-m-d' }}" required></label>
+  <label for="dashboard-end">Date de fin <input id="dashboard-end" type="date" name="end" value="{{ end|date:'Y-m-d' }}" required></label>
+  <button class="btn btn-primary" type="submit">Appliquer la période</button>
+  <a class="btn btn-ghost" href="{% url 'dashboard' %}#dashboard-analysis">Mois en cours</a>
+</form>
 <div class="analysis-grid">
   {% if revenue != None %}<section class="panel"><div class="panel-heading"><h2>Chiffres de la période</h2><span class="badge">{{ sales_count }} vente{{ sales_count|pluralize }}</span></div><div class="finance-grid"><div><span>Chiffre d’affaires brut</span><strong>{{ revenue|money }}</strong></div><div><span>Encaissements nets des remboursements</span><strong>{{ collections|money }}</strong></div><div><span>Remboursements de la période</span><strong>{{ refunds|money }}</strong></div><div><span>Marge commerciale après retours</span><strong>{{ margin|money }}</strong></div></div><p class="panel-note">La marge commerciale ne constitue pas un bénéfice net. Les charges d’exploitation ne sont pas déduites.</p></section>{% endif %}
   {% if perms.pharmacy.view_sale %}<section class="panel"><div class="panel-heading"><h2>Produits les plus vendus</h2><span class="muted">Quantités brutes</span></div><div class="ranking">{% for p in top_products %}<div class="rank-row"><div class="rank-caption"><strong>{{ p.lot__medicine__name }}</strong><span>{{ p.units }} unités</span></div><meter min="0" max="{{ top_products.0.units|default:1 }}" value="{{ p.units }}" aria-label="{{ p.lot__medicine__name }} : {{ p.units }} unités">{{ p.units }} unités</meter></div>{% empty %}<p class="empty">Aucune vente sur cette période.</p>{% endfor %}</div><p class="panel-note">Classement sur la période sélectionnée. Aucune comparaison à une période précédente.</p></section>{% endif %}
 </div>
 {% if purchases_total != None %}<p class="operation-context">Achats effectivement réceptionnés sur la période : <strong>{{ purchases_total|money }}</strong></p>{% endif %}
+</section>
+{% endif %}
+{% if low_stock != None or expiring != None %}
+<div class="section-heading"><div><h2 id="dashboard-stock" tabindex="-1">Surveillance du stock</h2><p class="dashboard-caption">Aperçu de six références ou lots maximum par liste. Consultez les listes complètes pour agir.</p></div></div>
+{% endif %}
 <div class="analysis-grid">
   {% if low_stock != None %}<section class="panel"><div class="panel-heading"><h2>Stocks à réapprovisionner</h2><a href="{% url 'entity_list' 'medicaments' %}?sort=stock">Catalogue par stock croissant {% icon 'arrow' %}</a></div><div class="table-wrap"><table class="responsive-table" role="table"><thead><tr><th scope="col">Médicament</th><th scope="col" class="num">Disponible</th><th scope="col" class="num">Seuil</th></tr></thead><tbody>{% for m in low_stock %}<tr><td data-label="Médicament"><strong>{{ m }}</strong></td><td data-label="Disponible" class="num"><span class="badge warning">{% icon 'warning' %} {% if m.stock == 0 %}Rupture{% else %}{{ m.stock }} unités{% endif %}</span></td><td data-label="Seuil" class="num">{{ m.threshold }}</td></tr>{% empty %}<tr><td colspan="3" class="empty">Aucun stock faible.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
   {% if expiring != None %}<section class="panel"><div class="panel-heading"><h2>Péremptions à surveiller</h2><a href="{% url 'stock' %}?status=soon">Voir les lots {% icon 'arrow' %}</a></div><div class="table-wrap"><table class="responsive-table" role="table"><thead><tr><th scope="col">Médicament / lot</th><th scope="col">Péremption</th><th scope="col" class="num">Stock</th></tr></thead><tbody>{% for l in expiring %}<tr><td data-label="Médicament"><div><strong>{{ l.medicine }}</strong><small>{{ l.number }}</small></div></td><td data-label="Péremption">{{ l.expires_on|date:'d/m/Y' }}</td><td data-label="Stock" class="num">{{ l.quantity }}</td></tr>{% empty %}<tr><td colspan="3" class="empty">Aucune péremption proche.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
 </div>
-{% if recent_sales != None %}<section class="panel"><div class="panel-heading"><h2>Dernières ventes de la période</h2><a href="{% url 'sales' %}">Historique {% icon 'arrow' %}</a></div><div class="table-wrap"><table class="responsive-table" role="table"><thead><tr><th scope="col">Référence</th><th scope="col">Client</th><th scope="col">Date</th><th scope="col">Opérateur</th><th scope="col" class="num">Total</th></tr></thead><tbody>{% for s in recent_sales %}<tr><td data-label="Référence"><a href="{% url 'sale_detail' s.pk %}">{{ s }}</a></td><td data-label="Client">{{ s.customer|default:'Comptoir' }}</td><td data-label="Date">{{ s.validated_at|date:'d/m/Y H:i' }}</td><td data-label="Opérateur">{{ s.author }}</td><td data-label="Total" class="num"><strong>{{ s.total|money }}</strong></td></tr>{% empty %}<tr><td colspan="5" class="empty">Les ventes validées apparaîtront ici.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% if recent_sales != None %}<p class="dashboard-caption">Historique ci-dessous : période du {{ start|date:'d/m/Y' }} au {{ end|date:'d/m/Y' }}, six ventes maximum.</p><section class="panel"><div class="panel-heading"><h2>Dernières ventes de la période</h2><a href="{% url 'sales' %}">Historique {% icon 'arrow' %}</a></div><div class="table-wrap"><table class="responsive-table" role="table"><thead><tr><th scope="col">Référence</th><th scope="col">Client</th><th scope="col">Date</th><th scope="col">Opérateur</th><th scope="col" class="num">Total</th></tr></thead><tbody>{% for s in recent_sales %}<tr><td data-label="Référence"><a href="{% url 'sale_detail' s.pk %}">{{ s }}</a></td><td data-label="Client">{{ s.customer|default:'Comptoir' }}</td><td data-label="Date">{{ s.validated_at|date:'d/m/Y H:i' }}</td><td data-label="Opérateur">{{ s.author }}</td><td data-label="Total" class="num"><strong>{{ s.total|money }}</strong></td></tr>{% empty %}<tr><td colspan="5" class="empty">Les ventes validées apparaîtront ici.</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+</div>
 {% endblock %}

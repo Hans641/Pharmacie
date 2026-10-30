@@ -55,6 +55,24 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
           assert.equal(await page.locator('#workspace').evaluate(el => el.inert), false);
           assert.equal(await page.evaluate(() => document.activeElement.hasAttribute('data-nav-open')), true);
         }
+        if (await page.locator('.dashboard').count()) {
+          // Entrée active les liens natifs ; la cible doit recevoir le focus.
+          for (const link of await page.locator('.dashboard-sections a').all()) {
+            const target = (await link.getAttribute('href')).slice(1);
+            await link.focus();
+            await page.keyboard.press('Enter');
+            assert.equal(await page.evaluate(() => document.activeElement.id), target);
+          }
+          if (await page.locator('#dashboard-start').count()) {
+            await page.locator('#dashboard-start').fill('2000-01-01');
+            await page.locator('#dashboard-end').fill('2000-01-31');
+            await Promise.all([page.waitForURL(url => url.searchParams.get('start') === '2000-01-01'), page.getByRole('button', { name: 'Appliquer la période', exact: true }).click()]);
+            assert((await page.locator('#dashboard-period-help').textContent()).includes('01/01/2000 au 31/01/2000'));
+            await Promise.all([page.waitForURL(url => !url.search), page.getByRole('link', { name: 'Mois en cours', exact: true }).click()]);
+            assert.equal(await page.locator('#dashboard-start').inputValue(), (await page.locator('#dashboard-end').inputValue()).slice(0, 8) + '01');
+          }
+          assert(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)));
+        }
         if (await page.locator('#cash-search').count()) {
           await page.keyboard.press('F2');
           assert.equal(await page.evaluate(() => document.activeElement.id), 'cash-search');
@@ -180,6 +198,13 @@ if (process.env.PHARMAGEST_SALE_ID) routes.push(`/ventes/${process.env.PHARMAGES
     for (const route of routes) {
       assert.equal((await nativePage.goto(base + route)).status(), 200);
       assert(await nativePage.locator('#navigation-panel').isVisible());
+      if (await nativePage.locator('#dashboard-start').count()) {
+        await nativePage.locator('#dashboard-start').fill('2000-01-01');
+        await nativePage.locator('#dashboard-end').fill('2000-01-31');
+        await Promise.all([nativePage.waitForURL(url => url.searchParams.get('start') === '2000-01-01'), nativePage.getByRole('button', { name: 'Appliquer la période', exact: true }).click()]);
+        assert((await nativePage.locator('#dashboard-period-help').textContent()).includes('01/01/2000 au 31/01/2000'));
+        await Promise.all([nativePage.waitForURL(url => !url.search), nativePage.getByRole('link', { name: 'Mois en cours', exact: true }).click()]);
+      }
       if (await nativePage.locator('form[data-operation]').count()) {
         assert.equal(await nativePage.locator('form[data-operation]').evaluate(form => form.noValidate), false);
         assert(!(await nativePage.locator('[data-operation-preview]').isVisible()));

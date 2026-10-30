@@ -371,3 +371,21 @@ dialog .actions { justify-content: flex-end; }
 @media (max-width: 600px) {
   .account-menu summary > span:not(.avatar) { max-width: 120px; }
 }
+
+/* Tableau de bord : séparer les données actuelles de l'analyse datée. */
+.dashboard { min-width: 0; }
+.dashboard-sections { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-6); }
+.dashboard-sections a { display: inline-flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); font-weight: 650; }
+.dashboard-caption { margin: var(--space-2) 0 0; color: var(--muted); font-size: var(--text-sm); max-width: 80ch; }
+.dashboard [id^="dashboard-"] { scroll-margin-top: 96px; }
+.dashboard-period { padding: var(--space-6); margin-bottom: var(--space-8); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.dashboard-filters { margin-bottom: var(--space-6); }
+.dashboard-filters input { width: 100%; min-width: 0; }
+.dashboard-period .analysis-grid { margin-bottom: 0; }
+.dashboard > .dashboard-caption { margin-bottom: var(--space-4); }
+@media (max-width: 600px) {
+  .dashboard-period { padding: var(--space-4); }
+  .dashboard-filters > .btn { flex: 1 1 100%; }
+  .dashboard-sections { gap: var(--space-2); }
+  .dashboard-sections a { flex: 1 1 auto; justify-content: center; }
+}

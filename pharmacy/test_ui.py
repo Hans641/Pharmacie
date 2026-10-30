@@ -445,3 +445,61 @@ class CashierExperienceTests(Fixtures, TestCase):
         self.assertContains(response, 'src="/static/js/cashier.js"')
         self.assertNotContains(response, 'data-cart-add')
         self.assertNotContains(response, 'name="method" value="mobile"')
+
+
+class DashboardPeriodTests(Fixtures, TestCase):
+    """La période filtre les ventes, sans dater artificiellement les alertes actuelles."""
+
+    def setUp(self):
+        self.make_data()
+        self.client.force_login(self.user)
+
+    def test_past_period_keeps_current_stock_and_daily_sales(self):
+        from . import services
+        self.received(quantity=20, days=30)
+        sale = self.sale(quantity=3)
+        services.validate_sale(self.user, sale.pk)
+        response = self.client.get('/', {'start': '2000-01-01', 'end': '2000-01-31'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['revenue'], 0)
+        self.assertEqual(response.context['daily_sales'], Decimal('60'))
+        self.assertEqual(response.context['expiring_count'], 1)
+        self.assertContains(response, 'Du 01/01/2000 au 31/01/2000, dates incluses.')
+        self.assertContains(response, 'href="/#dashboard-analysis"')
+        self.assertContains(response, 'id="dashboard-analysis" tabindex="-1"')
+        self.assertContains(response, 'action="#dashboard-analysis"')
+
+    def test_reversed_period_displays_effective_fallback_dates(self):
+        today = timezone.localdate()
+        response = self.client.get('/', {'start': '2000-02-01', 'end': '2000-01-01'})
+        self.assertContains(response, 'Période invalide')
+        self.assertEqual(response.context['start'], today.replace(day=1))
+        self.assertEqual(response.context['end'], today)
+        self.assertContains(response, f'value="{today.isoformat()}"')
+
+    def test_dashboard_sections_follow_each_roles_permissions(self):
+        setup_roles()
+        for role in ['Administrateur', 'Pharmacien responsable', 'Caissier',
+                     'Gestionnaire de stock', 'Responsable de gestion', None]:
+            with self.subTest(role=role):
+                self.other.groups.clear()
+                if role:
+                    self.other.groups.add(Group.objects.get(name=role))
+                # Chaque requête recharge l'utilisateur, sans cache de permissions partagé.
+                self.client.force_login(self.other)
+                response = self.client.get('/')
+                self.assertEqual(response.status_code, 200)
+                if role:
+                    self.assertContains(response, 'id="dashboard-analysis"')
+                else:
+                    self.assertNotContains(response, 'id="dashboard-analysis"')
+                    self.assertNotContains(response, 'name="start"')
+                if role in [None, 'Gestionnaire de stock']:
+                    self.assertNotContains(response, 'Chiffre d’affaires brut')
+                if role == 'Gestionnaire de stock':
+                    self.assertContains(response, 'Achats effectivement réceptionnés')
+                if role:
+                    self.assertContains(response, 'id="dashboard-stock"')
+                else:
+                    self.assertNotContains(response, 'href="#dashboard-stock"')
+                    self.assertNotContains(response, 'Ouvrir une vente comptoir')
