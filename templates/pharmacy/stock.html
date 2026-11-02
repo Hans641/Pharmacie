@@ -18,7 +18,7 @@
     {% include 'includes/stock_status_filters.html' %}
     {% filter_chips %}
     <div class="stock-results-heading"><h2>{{ page_obj.paginator.count }} lot{{ page_obj.paginator.count|pluralize }} trouvé{{ page_obj.paginator.count|pluralize }}</h2><span class="muted">Tri : péremption la plus proche d’abord</span></div>
-    <div class="table-wrap"><table class="responsive-table" role="table"><caption class="visually-hidden">Stock physique par médicament et lot, par date de péremption croissante</caption><thead><tr><th scope="col">Médicament</th><th scope="col">Lot</th><th scope="col">Péremption</th><th scope="col" class="num">Stock physique</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead><tbody>
+    <div class="table-wrap"><table class="responsive-table stock-table" role="table"><caption class="visually-hidden">Stock physique par médicament et lot, par date de péremption croissante</caption><thead><tr><th scope="col">Médicament</th><th scope="col">Lot</th><th scope="col">Péremption</th><th scope="col" class="num">Stock physique</th><th scope="col">État</th><th scope="col">Actions</th></tr></thead><tbody>
     {% for l in page_obj %}<tr>
       <td data-label="Médicament"><strong>{% if perms.pharmacy.view_medicine %}<a href="{% url 'entity_detail' 'medicaments' l.medicine_id %}">{{ l.medicine }}</a>{% else %}{{ l.medicine }}{% endif %}</strong></td>
       <td data-label="Lot"><span class="stock-lot-number">{{ l.number }}</span></td>
