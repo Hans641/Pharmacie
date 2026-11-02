@@ -125,6 +125,7 @@ def main():
     parser.add_argument('--probe-browser', action='store_true', help='Bouton témoin sans serveur, sans base ni authentification.')
     parser.add_argument('--matrix', action='store_true', help='Lot 2 : collecter les pages des deux thèmes sans arrêter au premier défaut.')
     parser.add_argument('--presentation', action='store_true', help='Avec --matrix : contrastes rendus et documents d’impression HTML (lot 3).')
+    parser.add_argument('--accessibility', action='store_true', help='Connexion, réinitialisation et rendus isolés des templates d’erreur.')
     parser.add_argument('--server', choices=['single', 'threaded'], default='threaded', help='Comparatif serveur ; single conserve le mode mono-thread antérieur.')
     parser.add_argument('--lot1-case', choices=['all', 'dashboard-360-sans-js-mouse'], default='all')
     parser.add_argument('--lot1-repeat', type=int, choices=range(1, 21), default=1)
@@ -133,9 +134,9 @@ def main():
     args = parser.parse_args()
     if args.presentation and not args.matrix:
         parser.error('--presentation exige --matrix (mêmes données isolées).')
-    if sum([args.diagnose_lot1, args.prepare_only, args.matrix, args.probe_browser]) > 1:
-        parser.error('Les modes --diagnose-lot1, --matrix, --probe-browser et --prepare-only sont exclusifs.')
-    if args.diagnose_lot1:
+    if sum([args.diagnose_lot1, args.prepare_only, args.matrix, args.probe_browser, args.accessibility]) > 1:
+        parser.error('Les modes --diagnose-lot1, --matrix, --accessibility, --probe-browser et --prepare-only sont exclusifs.')
+    if args.diagnose_lot1 or args.accessibility:
         args.role = 'administrateur'
     # Vérifier les outils avant toute préparation coûteuse, hors mode serveur seul.
     module = None
@@ -164,13 +165,22 @@ def main():
             raise RuntimeError('Échec du témoin navigateur ; voir browser-probe.json')
         return
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    report = {'mode': 'preparation' if args.prepare_only else 'lot1-diagnostic' if args.diagnose_lot1 else 'matrix' if args.matrix else 'browser', 'status': 'running',
+    report = {'mode': 'accessibility' if args.accessibility else 'preparation' if args.prepare_only else 'lot1-diagnostic' if args.diagnose_lot1 else 'matrix' if args.matrix else 'browser', 'status': 'running',
               'server': args.server, 'revision': revision, 'manual_visual_review': 'pending', 'roles': []}
     journal = RequestJournal(output / 'requests.jsonl') if not args.prepare_only else None
     try:
         with tempfile.TemporaryDirectory(prefix='pharmagest-ux-data-') as directory:
             password = secrets.token_urlsafe(32)
             cases = prepare(Path(directory).resolve(), password)
+            if args.accessibility:
+                # Rendus isolés : aucun handler HTTP ni erreur applicative provoquée.
+                from django.template.loader import render_to_string
+                from django.test import RequestFactory
+                from django.contrib.auth.models import AnonymousUser
+                request = RequestFactory().get('/')
+                request.user = AnonymousUser()
+                for code in [403, 404, 500]:
+                    (Path(directory) / f'{code}.html').write_text(render_to_string(f'{code}.html', request=request))
             cases = [case for case in cases if args.role in ['all', case['role']]]
             if args.prepare_only:
                 report.update(status='preparation_ok', roles=[dict(role=c['role'], rendered=c['rendered']) for c in cases])
@@ -190,6 +200,8 @@ def main():
                             for key in ['UX_ROUTES', 'UX_WIZARD', 'PHARMAGEST_SALE_ID', 'UX_LOT1_CASE', 'UX_LOT1_REPEAT', 'UX_PRESENTATION']:
                                 env.pop(key, None)
                             env['UX_PRESENTATION'] = '1' if args.presentation else '0'
+                            if args.accessibility:
+                                env['UX_ERROR_FIXTURES'] = directory
                             env.update(UX_ROLE=case['role'], PLAYWRIGHT_MODULE_PATH=module, PHARMAGEST_URL=f'http://127.0.0.1:{server.server_port}',
                                        PHARMAGEST_USERNAME=case['username'], PHARMAGEST_PASSWORD=password,
                                        UX_ROUTES=','.join(case['routes']), UX_OUTPUT_DIR=str(output / case['role']),
@@ -200,7 +212,7 @@ def main():
                                 env['PHARMAGEST_SALE_ID'] = str(case['sale_id'])
                             if 'CHROME_PATH' not in env and shutil.which('google-chrome'):
                                 env['CHROME_PATH'] = shutil.which('google-chrome')
-                            script = 'ux_lot1_diagnose.cjs' if args.diagnose_lot1 else 'ux_matrix_check.cjs' if args.matrix else 'ux_browser_check.cjs'
+                            script = 'ux_accessibility.cjs' if args.accessibility else 'ux_lot1_diagnose.cjs' if args.diagnose_lot1 else 'ux_matrix_check.cjs' if args.matrix else 'ux_browser_check.cjs'
                             try:
                                 result = subprocess.run(['node', str(ROOT / 'tools' / script)], cwd=ROOT, env=env,
                                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
@@ -228,7 +240,7 @@ def main():
                         thread.join(timeout=5)
                 if failures:
                     raise RuntimeError('Recette terminée avec échecs : ' + ', '.join(failures) + '. Voir ' + str(output))
-                report['status'] = 'automated_checks_ok_manual_review_pending' if args.matrix else 'automated_checks_ok'
+                report['status'] = 'automated_checks_ok_manual_review_pending' if (args.matrix or args.accessibility) else 'automated_checks_ok'
                 if args.matrix:
                     report['deferred'] = ['Filtre de période validé séparément : rapport dbxll7ue, 20/20 ; non réexercé dans la matrice', 'Examen visuel, ordre complet du clavier et parcours métier à compléter']
     except Exception as error:
