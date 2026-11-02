@@ -1273,3 +1273,11 @@ La fusion QA est présente dans main à `3b28d08`. Inspection visuelle de la cap
 ### Rapport présentation kqi1nqyl reçu
 
 176/176 cas administrateur OK, 11 536 mesures de contraste au repos >=4,5:1 (minimum 5,4348), huit contrôles désactivés exclus ; 12 impressions générées et trois PDF d’une page inspectés. Tableau par largeur/JS/thème, limites et empreinte : [RECETTE_PRESENTATION.md](RECETTE_PRESENTATION.md). Les autres rôles et états, le multipage, les PDF ReportLab et le zoom restent à tester. Colonnes Actions vides et liens d’export encore imprimés : amélioration ouverte, sans bloquer l’enregistrement du checkpoint QA.
+
+### Retouches d’impression après bbe1005
+
+Colonnes Actions et invites de téléchargement masquées sur papier par no-print ; assertions d’impression renforcées. 11 tests de présentation et cinq tests JS réussis. Navigateur après correction **non exécuté**, socket refusée (2obe37jh). Lancer `--matrix --presentation` pour les cinq rôles ; les 176 succès antérieurs ne valident pas ces derniers templates. Avant/après dans RECETTE_PRESENTATION.md.
+
+### Rapport cinq rôles 5wjmy_iw reçu et vérifié
+
+**720/720 cas OK** après les retouches papier, 47 038 mesures de contraste au repos >=4,5:1 (minimum 5,4348), 24 contrôles désactivés exclus ; 720 captures et 52 PDF présents. Texte des 52 PDF contrôlé, trois rendus sombres examinés : colonnes Actions et invites PDF retirées. Tous les documents tiennent sur une page ; aucun résultat multipage/ReportLab revendiqué. Bilan par rôle, preuves et empreintes dans [RECETTE_PRESENTATION.md](RECETTE_PRESENTATION.md). Les tests d’états, zoom, authentification/erreurs, lecteur d’écran et chronométrage restent distincts.

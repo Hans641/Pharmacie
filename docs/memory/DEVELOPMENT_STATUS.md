@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière reprise vérifiée : **2 novembre 2026**. Dépôt propre au début de la reprise à `main` / `3b28d08`, fusion QA frontend ; référence locale `origin/main` identique. Pas d’interrogation distante. Les anciens états Git ci-dessous sont historiques.
+Dernière reprise vérifiée : **2 novembre 2026**. Branche active `test/recette-presentation` à `bbe1005`, retouches d’impression et documentation non commitées ; `main` observé précédemment à `3b28d08`. Les états ci-dessous sont datés et historiques.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -165,3 +165,11 @@ Inventaire source : 43 couleurs littérales dans app.css/experience.css, 39 toke
 ## 2 novembre 2026 — Checkpoint présentation après rapport hôte
 
 Rapport kqi1nqyl analysé : administrateur 176/176 OK, 176 captures, 342 HTTP terminés ; 11 536 mesures de contraste au repos >=4,5:1 (minimum 5,4348), huit contrôles désactivés exclus. Douze impressions générées ; trois PDF monochapitre convertis et inspectés : lisibles, fond clair et montants français. Colonnes Actions vides et liens de téléchargement restent sur papier. Les autres rôles, multipage, états, zoom et PDF ReportLab restent ouverts. Détail et empreinte dans RECETTE_PRESENTATION.md. Cinq tests JS réussis, check/syntaxe/compilation/diff sans anomalie ; suite Django complète non rejouée. Commit autorisé, création de branche test/recette-presentation refusée (.git en lecture seule) ; aucun commit/merge/push par l’agent.
+
+## 2 novembre 2026 — Impression : retouches en attente de recette
+
+Branche active test/recette-presentation, commit bbe1005 confirmé ; main reste à 3b28d08. Correction minimale des colonnes Actions et invites PDF imprimées (trois templates), assertions navigateur correspondantes ajoutées. 11 tests de présentation réussis (20,248 s), cinq tests JS réussis, check/syntaxe/diff sans anomalie. Recette après correction non exécutée : socket refusée, rapport 2obe37jh, zéro requête. Prochaine commande poste : `--matrix --presentation`, cinq rôles ; inspecter les nouvelles impressions. Aucun nouveau commit/merge/push. Détail avant/après dans RECETTE_PRESENTATION.md.
+
+## 2 novembre 2026 — Recette présentation des cinq rôles vérifiée
+
+Rapport hôte 5wjmy_iw vérifié : cinq rôles, 720/720 cas OK, 720 captures, 1 534 HTTP terminés, 47 038 mesures de contraste au repos >=4,5 (minimum 5,4348), 24 contrôles désactivés exclus. Les 52 PDF HTML sont présents et tiennent chacun sur une page ; texte extrait de tous sans colonne Actions ni invite de téléchargement. Trois PDF sombres administrateur convertis et inspectés : retouches visuellement confirmées. Détail/empreintes dans RECETTE_PRESENTATION.md. Multipage, reçu encaissé, ReportLab, états exhaustifs, zoom et lecteur d’écran restent ouverts. Aucun nouveau test applicatif ni commit/merge/push pour cette analyse.

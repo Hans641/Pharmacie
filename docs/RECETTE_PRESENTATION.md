@@ -132,3 +132,60 @@ Les liens d’action et colonnes vides sont des améliorations de présentation 
 Contrôles réexécutés : cinq tests JS de calcul réussis, syntaxe Node, compilation Python, `manage.py check` et `git diff --check` sans anomalie. Suite Django complète non rejouée pour ces seuls outils/documents.
 
 Commit autorisé dans une branche dédiée, sans merge ni push. Tentative `git switch -c test/recette-presentation` refusée par les droits d’écriture de `.git` ; aucun commit ni création de branche effectué par l’agent. Les changements restent dans le dossier de travail de main pour être enregistrés depuis le terminal utilisateur. Les preuves `/tmp` sont locales et peuvent disparaître au redémarrage ; le bilan et l’empreinte sont conservés dans ce document.
+
+## 2 novembre 2026 — Retouches d’impression après checkpoint
+
+Commit précédent confirmé par Git : `bbe1005` sur `test/recette-presentation`, dossier propre au début de la reprise. Aucun nouveau commit, merge ou push effectué.
+
+Cause démontrée par les trois images du rapport kqi1nqyl : masquer les boutons ne masque ni la colonne Actions ni les invites de téléchargement en liens/strong. Réutilisation de `no-print`, déjà géré par la feuille print locale ; aucune permission, logique métier ou règle écran changée intentionnellement.
+
+| Fichier | Avant | Après |
+|---|---|---|
+| `templates/pharmacy/sale_detail.html` | Colonne Actions vide sur papier | En-tête et cellules marqués no-print |
+| `templates/pharmacy/purchase_detail.html` | Colonne Actions et lien de réception PDF imprimés | Masqués sur papier ; total dans sa colonne avec cellule d’action séparée, masquée à l’impression |
+| `templates/pharmacy/reports.html` | Invite Télécharger le PDF sur papier | Invite masquée, titres et descriptions conservés |
+| `tools/ux_presentation.cjs`, `tools/ux_matrix_check.cjs` | Contrôle des boutons/champs seulement | Régression : compter les en-têtes Actions et invites PDF encore visibles ; exiger zéro |
+
+Contrôles réels : **11 tests PresentationTests réussis (20,248 s)**, **5 tests JS de calcul réussis**, syntaxe Node, check Django et diff sans anomalie. Le rendu serveur ne prouve pas l’impression. Nouvelle tentative navigateur : `/tmp/pharmagest-ux-report-2obe37jh`, socket refusée, zéro requête, **validation navigateur après correction non exécutée**. Les 176 succès du rapport précédent concernent les templates avant ces retouches.
+
+Commande suivante sur le poste, cinq rôles et nouvelle présentation :
+
+```bash
+.venv/bin/python tools/run_ux_review.py --matrix --presentation
+```
+
+Attendre ce rapport et inspecter les PDF actualisés avant de clore ces défauts. Les champs/états non couverts, le zoom, le multipage et ReportLab restent des vérifications distinctes.
+
+## 2 novembre 2026 — Recette des cinq rôles après retouches
+
+Rapport hôte `5wjmy_iw` analysé : **720/720 cas OK**, 720 captures présentes, **1 534 requêtes reçues et terminées**, **47 038 mesures de contraste au repos >=4,5:1**, minimum global **5,4348:1**. Vingt-quatre exclusions de contrôles désactivés, aucune exclusion présentée comme réussite. La révision Git de base du rapport est `bbe1005` ; les retouches non commitées du dossier de travail étaient utilisées lors de ce passage.
+
+Chaque rôle couvre les quatre largeurs (360/768/1280/1920), les deux thèmes et JS/sans JS. Le détail page par page avec captures et mesures se trouve dans les fichiers ci-dessous, sous `/tmp/pharmagest-ux-report-5wjmy_iw/`.
+
+| Rôle | Cas OK / exécutés | Mesures de contraste | Minimum | PDF HTML | Preuve |
+|---|---:|---:|---:|---:|---|
+| administrateur | 176/176 | 11536 | 5.4348:1 | 12 | `administrateur/matrix.json` |
+| caissier | 96/96 | 7558 | 5.4831:1 | 8 | `caissier/matrix.json` |
+| gestion | 128/128 | 8654 | 5.4831:1 | 12 | `gestion/matrix.json` |
+| pharmacien | 176/176 | 11378 | 5.4348:1 | 12 | `pharmacien/matrix.json` |
+| stock | 144/144 | 7912 | 5.4348:1 | 8 | `stock/matrix.json` |
+
+### Impression : vérification après correction
+
+Les **52 PDF et leurs captures** sont présents ; `pdfinfo` confirme une page par document. Extraction du texte des 52 PDF avec `pdftotext` : aucune occurrence « Actions », « Télécharger le PDF » ou « Bon de réception PDF ». Les assertions d’impression confirment fond blanc/schéma clair, contrôles masqués, absence de débordement et règles d’en-tête/non-coupure des lignes pour les tableaux présents.
+
+Trois PDF administrateur sombre/JS ont été convertis avec `pdftoppm` et leurs images inspectées : vente brouillon VEN-000005, achat partiel ACH-000002 et page Rapports & documents. Résultat : colonnes et invites retirées, montants alignés et libellés lisibles. Images :
+
+- `/tmp/pharmagest-print-review-5wjmy_iw/dark-js-1280-_ventes_5_-print.png`
+- `/tmp/pharmagest-print-review-5wjmy_iw/dark-js-1280-_achats_2_-print.png`
+- `/tmp/pharmagest-print-review-5wjmy_iw/dark-js-1280-_rapports_-print.png`
+
+Les défauts précis d’impression sont résolus dans ce périmètre. La vente est un brouillon ; la page Rapports est un index, pas les documents métier. Le rappel du total dans Encaissement est conservé. Aucun succès de multipage, reçu encaissé ou PDF ReportLab déduit de ces résultats. États interactifs exhaustifs, pages d’authentification/erreur, zoom réel 200 %, lecteur d’écran et chronométrage restent ouverts. Aucun nouveau test Django exécuté lors de cette analyse documentaire ; les 11 tests ciblés précédents concernaient déjà les retouches testées ici. Pas de commit/merge/push pendant l’analyse.
+
+### Empreintes des preuves
+
+- `administrateur/matrix.json` : `f35cf6dd1f0ca58feff1add4717a3769ac3d7193c486c8783de0cae6e7428396`
+- `caissier/matrix.json` : `cb74c37deb4631770320b5a4aaac9594b295e90351ef8f413e4a50d57b8796d9`
+- `gestion/matrix.json` : `bf3e52c21d093275bb3c2636b8cbe0e2bc84187c7e2225ddf64f2b354ac7bb89`
+- `pharmacien/matrix.json` : `e280f441eb38a32663ec40e340f20d6ae2407e11f977e0edd269b23ae1799ab5`
+- `stock/matrix.json` : `5ebdbaa61fcbd3e0bf3376682c62500b8a865113fc627241e85b84fdd9d513e6`

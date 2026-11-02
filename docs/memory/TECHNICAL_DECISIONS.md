@@ -77,3 +77,7 @@ Le témoin olrbhn5i isole un échec du clic dans le cas hors écran/smooth/sans 
 ## 2 novembre 2026 — Mesurer le rendu avant de retoucher les couleurs
 
 Étendre la matrice existante par une option explicite `--presentation` : couleurs calculées du DOM et composition des fonds simples, exclusions documentées, seuil projet 4,5:1 ; impression HTML séparée des PDF ReportLab. Conserver les cas non mesurables comme inspections en attente, jamais comme réussites. Ne pas modifier les composants à partir du seul inventaire de couleurs. Aucun changement architectural.
+
+## 2 novembre 2026 — Retirer les actions des documents HTML imprimés
+
+Les captures PDF kqi1nqyl démontrent des colonnes Actions vides et invites PDF imprimées. Réutiliser la classe no-print sur les éléments ciblés, conserver les références et descriptions utiles. Séparer la cellule Total de l’action dans le pied du tableau d’achat pour garder les six colonnes imprimables cohérentes. Ajouter des contrôles DOM d’impression spécifiques ; ne pas toucher aux permissions ni aux PDF ReportLab.
