@@ -74,3 +74,7 @@ Les variables sont lues par `os.environ` ; `.env` n’est pas chargé automatiqu
 ### Thèmes partagés (30 octobre 2026)
 
 `base.html` charge le petit script local `theme.js` en tête, puis `themes.css` après les styles de composants. Les palettes utilisent les tokens communs ; seul `pharmagest-theme` est mémorisé côté navigateur. Sans JS, `prefers-color-scheme` détermine la palette. Un sélecteur natif partagé en pied de page permet la préférence manuelle. Les variables sombres sont restreintes à l'écran, l'impression et les PDF restant indépendants.
+
+### Serveur de recette instrumenté
+
+Le lanceur de QA utilise `tools/ux_review_server.py` : mode single de comparaison ou ThreadedWSGIServer Django par défaut, même handler WSGI. Les journaux sont limités aux événements transport/HTTP et dates de filtre, dans les dossiers temporaires de rapport. Ce serveur n'est pas un serveur de production et ne change pas l'architecture applicative.

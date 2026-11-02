@@ -14,7 +14,7 @@ import tempfile
 import threading
 import uuid
 from datetime import timedelta
-from wsgiref.simple_server import make_server, WSGIRequestHandler
+from ux_review_server import create_server, RequestJournal
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -118,17 +118,22 @@ def prepare(work, password):
     return cases
 
 
-class QuietHandler(WSGIRequestHandler):
-    def log_message(self, *args):
-        pass
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prepare-only', action='store_true', help='Vérifier les données et rendus serveur sans ouvrir de navigateur.')
+    parser.add_argument('--diagnose-lot1', action='store_true', help='Reproduire les deux échecs avec événements, géométrie et captures.')
+    parser.add_argument('--probe-browser', action='store_true', help='Bouton témoin sans serveur, sans base ni authentification.')
+    parser.add_argument('--matrix', action='store_true', help='Lot 2 : collecter les pages des deux thèmes sans arrêter au premier défaut.')
+    parser.add_argument('--server', choices=['single', 'threaded'], default='threaded', help='Comparatif serveur ; single conserve le mode mono-thread antérieur.')
+    parser.add_argument('--lot1-case', choices=['all', 'dashboard-360-sans-js-mouse'], default='all')
+    parser.add_argument('--lot1-repeat', type=int, choices=range(1, 21), default=1)
     parser.add_argument('--role', choices=['all', 'administrateur', 'pharmacien', 'caissier', 'stock', 'gestion'], default='all')
     parser.add_argument('--output', type=Path, help='Dossier de résultats neuf ; sinon dossier temporaire conservé.')
     args = parser.parse_args()
+    if sum([args.diagnose_lot1, args.prepare_only, args.matrix, args.probe_browser]) > 1:
+        parser.error('Les modes --diagnose-lot1, --matrix, --probe-browser et --prepare-only sont exclusifs.')
+    if args.diagnose_lot1:
+        args.role = 'administrateur'
     # Vérifier les outils avant toute préparation coûteuse, hors mode serveur seul.
     module = None
     if not args.prepare_only:
@@ -140,9 +145,25 @@ def main():
         output = args.output.resolve()
     else:
         output = Path(tempfile.mkdtemp(prefix='pharmagest-ux-report-'))
+    if args.probe_browser:
+        env = os.environ.copy()
+        env.update(PLAYWRIGHT_MODULE_PATH=module, UX_OUTPUT_DIR=str(output))
+        # Aucune préparation Django ni ouverture de socket de serveur dans ce mode.
+        for key in ['PHARMAGEST_USERNAME', 'PHARMAGEST_PASSWORD', 'DEMO_PASSWORD']:
+            env.pop(key, None)
+        if 'CHROME_PATH' not in env and shutil.which('google-chrome'):
+            env['CHROME_PATH'] = shutil.which('google-chrome')
+        try:
+            result = subprocess.run(['node', str(ROOT / 'tools/ux_browser_probe.cjs')], cwd=ROOT, env=env, timeout=90)
+        finally:
+            print('Résultats : ' + str(output))
+        if result.returncode:
+            raise RuntimeError('Échec du témoin navigateur ; voir browser-probe.json')
+        return
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    report = {'mode': 'preparation' if args.prepare_only else 'browser', 'status': 'running',
-              'revision': revision, 'manual_visual_review': 'pending', 'roles': []}
+    report = {'mode': 'preparation' if args.prepare_only else 'lot1-diagnostic' if args.diagnose_lot1 else 'matrix' if args.matrix else 'browser', 'status': 'running',
+              'server': args.server, 'revision': revision, 'manual_visual_review': 'pending', 'roles': []}
+    journal = RequestJournal(output / 'requests.jsonl') if not args.prepare_only else None
     try:
         with tempfile.TemporaryDirectory(prefix='pharmagest-ux-data-') as directory:
             password = secrets.token_urlsafe(32)
@@ -154,38 +175,69 @@ def main():
             else:
                 from django.contrib.staticfiles.handlers import StaticFilesHandler
                 from django.core.wsgi import get_wsgi_application
-                with make_server('127.0.0.1', 0, StaticFilesHandler(get_wsgi_application()), handler_class=QuietHandler) as server:
+                with create_server(StaticFilesHandler(get_wsgi_application()), args.server, journal) as server:
                     thread = threading.Thread(target=server.serve_forever, daemon=True)
                     thread.start()
+                    failures = []
                     try:
                         for case in cases:
                             print('Recette navigateur : ' + case['role'], flush=True)
                             env = os.environ.copy()
                             # Éviter d'hériter d'une recette dirigée vers la base active.
-                            for key in ['UX_ROUTES', 'UX_WIZARD', 'PHARMAGEST_SALE_ID']:
+                            for key in ['UX_ROUTES', 'UX_WIZARD', 'PHARMAGEST_SALE_ID', 'UX_LOT1_CASE', 'UX_LOT1_REPEAT']:
                                 env.pop(key, None)
-                            env.update(PLAYWRIGHT_MODULE_PATH=module, PHARMAGEST_URL=f'http://127.0.0.1:{server.server_port}',
+                            env.update(UX_ROLE=case['role'], PLAYWRIGHT_MODULE_PATH=module, PHARMAGEST_URL=f'http://127.0.0.1:{server.server_port}',
                                        PHARMAGEST_USERNAME=case['username'], PHARMAGEST_PASSWORD=password,
                                        UX_ROUTES=','.join(case['routes']), UX_OUTPUT_DIR=str(output / case['role']),
                                        UX_WIZARD='1' if case['wizard'] else '0')
+                            if args.diagnose_lot1:
+                                env.update(UX_LOT1_CASE=args.lot1_case, UX_LOT1_REPEAT=str(args.lot1_repeat))
                             if case['sale_id']:
                                 env['PHARMAGEST_SALE_ID'] = str(case['sale_id'])
                             if 'CHROME_PATH' not in env and shutil.which('google-chrome'):
                                 env['CHROME_PATH'] = shutil.which('google-chrome')
-                            result = subprocess.run(['node', str(ROOT / 'tools/ux_browser_check.cjs')], cwd=ROOT, env=env,
-                                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
+                            script = 'ux_lot1_diagnose.cjs' if args.diagnose_lot1 else 'ux_matrix_check.cjs' if args.matrix else 'ux_browser_check.cjs'
+                            try:
+                                result = subprocess.run(['node', str(ROOT / 'tools' / script)], cwd=ROOT, env=env,
+                                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
+                            except subprocess.TimeoutExpired:
+                                if not args.matrix:
+                                    raise
+                                failures.append(case['role'])
+                                report['roles'].append(dict(role=case['role'], status='timeout'))
+                                (output / (case['role'] + '.log')).write_text('Délai maximal de 600 s atteint ; consulter matrix.json pour les résultats partiels et les cas non exécutés.\n')
+                                continue
                             (output / (case['role'] + '.log')).write_text(result.stdout.replace(password, '[masqué]'))
                             report['roles'].append(dict(role=case['role'], status='ok' if result.returncode == 0 else 'failed'))
                             if result.returncode:
-                                raise RuntimeError('Échec navigateur pour ' + case['role'] + '. Consulter le journal dans ' + str(output))
+                                if args.matrix:
+                                    print('Défauts collectés pour ' + case['role'] + ' ; voir son journal et matrix.json.', flush=True)
+                                else:
+                                    print(result.stdout.replace(password, '[masqué]'), flush=True)
+                                failures.append(case['role'])
+                                if not args.matrix:
+                                    raise RuntimeError('Échec navigateur pour ' + case['role'] + '. Consulter le journal dans ' + str(output))
                     finally:
+                        journal.record('cleanup_started')
+                        server.close_clients()
                         server.shutdown()
                         thread.join(timeout=5)
-                report['status'] = 'automated_checks_ok'
+                if failures:
+                    raise RuntimeError('Recette terminée avec échecs : ' + ', '.join(failures) + '. Voir ' + str(output))
+                report['status'] = 'automated_checks_ok_manual_review_pending' if args.matrix else 'automated_checks_ok'
+                if args.matrix:
+                    report['deferred'] = ['Filtre de période validé séparément : rapport dbxll7ue, 20/20 ; non réexercé dans la matrice', 'Examen visuel, ordre complet du clavier et parcours métier à compléter']
     except Exception as error:
         report.update(status='failed', error=str(error))
         raise
     finally:
+        if args.diagnose_lot1:
+            diagnostic = output / 'administrateur/lot1.json'
+            trials = json.loads(diagnostic.read_text()) if diagnostic.exists() else []
+            report['trials'] = dict(requested=args.lot1_repeat * (12 if args.lot1_case == 'all' else 1), executed=len(trials), ok=sum(row['status'] == 'OK' for row in trials), ko=sum(row['status'] == 'KO' for row in trials))
+        if journal is not None:
+            report['http'] = journal.summary()
+            print('Requêtes HTTP reçues : ' + str(report['http']['requests_received']))
         (output / 'summary.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
         print('Résultats : ' + str(output))
 

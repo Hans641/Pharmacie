@@ -1,6 +1,9 @@
 /* PharmaGest — design system local, sans police distante.
    Ordre : tokens / base / structure / composants / écrans / responsive. */
 :root {
+  /* Bootstrap active smooth : défilement immédiat pour garder les cibles stables,
+     y compris sans JS (témoin olrbhn5i : seul offscreen + smooth + sans JS échoue). */
+  scroll-behavior: auto;
   color-scheme: light;
   /* Couleurs de composants séparées des couleurs de texte. */
   --primary-bg: #126749;
@@ -441,8 +444,9 @@ dialog .actions { justify-content: flex-end; }
 .row-actions a { min-width: 44px; overflow-wrap: normal; }
 .badge { overflow-wrap: normal; word-break: normal; }
 @media (min-width: 601px) {
-  .catalogue-table { min-width: 900px; }
-  .catalogue-table .product-cell { min-width: 220px; }
+  .catalogue-table, .stock-table { min-width: 900px; }
+  .catalogue-table .product-cell, .stock-table td:first-child { min-width: 220px; }
+  .stock-table td:nth-child(2) { min-width: 128px; }
 }
 @media (max-width: 600px) {
   .responsive-table td[data-label="Actions"] { grid-template-columns: 1fr; }

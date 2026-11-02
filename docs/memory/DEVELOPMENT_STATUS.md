@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière vérification : **30 octobre 2026**. Reprise de recette à `main` / `7c871d3` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
+Dernière reprise vérifiée : **2 novembre 2026**. Reprise QA à `main` / `27ed6f6` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -32,7 +32,11 @@ Les tests PDF vérifient notamment réponse, type et signature ; ils ne prouvent
 
 ## Dernière étape et travail actuel
 
-Caisse, dashboard et stocks sont intégrés ; fusion stocks confirmée à `7c871d3` dans le dépôt actif. La référence locale `origin/main` est identique lors de la reprise ; le push a été déclaré effectué par l'utilisateur, sans vérification distante depuis l'agent. Tâche actuelle réorientée par l'utilisateur : mode sombre commun à toutes les pages, avec préférence système et choix explicite en pied de page. La recette navigateur reste incomplète ; le dernier rapport `6zmmb904` échoue sur un clic de période instable, sans preuve de résolution. Aucun commit, merge ou push demandé pour cette étape.
+Le dépôt actif est propre à `main` / `27ed6f6`, fusion de `feat/dark-mode` (`bfad35e`). La référence locale `origin/main` lui est identique ; aucun accès distant effectué pour confirmer GitHub. Les anciens passages « aucun commit » décrivent les sessions antérieures à la fusion et ne sont plus l'état actuel.
+
+Nouvelle tâche : QA frontend par lots 1 à 7, sans modèle/vue/service/permission/migration modifié dans les lots 1 à 6, sans fusion/push. Clic du dashboard sans JS corrigé et validé 20/20 dans dbxll7ue après surcharge du défilement smooth. Lot 2 en cours ; autres validations encore à exécuter. Chrome et sockets refusés dans le bac à sable. Branche `fix/recette-frontend` créée depuis `27ed6f6` dans une copie isolée `/tmp/pharmagest-recette-frontend`, car le `.git` du dépôt actif est en lecture seule. Aucun déplacement de main dans le dépôt actif.
+
+Un diagnostic dédié à lancer sur le poste est préparé : `.venv/bin/python tools/run_ux_review.py --diagnose-lot1`. Il parcourt douze cas souris/clavier, à 360/768 px, avec/sans JS pour le dashboard, avec preuves de focus, validation et géométrie. Ce diagnostic n’est pas une correction ; les résultats ultérieurs et la décision utilisateur de poursuivre le lot 2 sont consignés ci-dessous. Voir le tableau de résultats du lot 1 dans `../RECETTE_UX.md`.
 
 ## Prochaines étapes prioritaires
 
@@ -91,3 +95,67 @@ Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS son
 - Couverture et recette : `../MODE_SOMBRE.md`. Impression claire maintenue, PDF indépendants. Aucun changement métier ou de permission.
 - Vérification : 12 tests ciblés réussis (22,704 s), check Django, syntaxe JS et diff sans erreur. 17 paires de texte par palette calculées >=4,5:1 ; focus/bordures de champs >=3:1 sur surface. Préférence, stockage et synchronisation vérifiés en VM Node. Ces contrôles ne prouvent pas le rendu navigateur du mode sombre.
 - Prochaine vérification : sélectionner Sombre en pied de page et examiner les familles de pages aux quatre largeurs, puis l'aperçu d'impression. Recette générale et objectif caisse de 30 secondes toujours non validés.
+
+## Reprise QA — lot 1, 30 octobre 2026
+
+- Lecture du code : `forms.js` ne traite que les POST ; contrairement à l'hypothèse initiale, il ne met pas le GET du dashboard en noValidate. Aucun changement applicatif déduit des traces encore insuffisantes.
+- Nouveaux fichiers/modifications de test : `tools/ux_lot1_diagnose.cjs`, option `--diagnose-lot1` de `tools/run_ux_review.py`. Captures/JSON propres à chaque tentative ; aucune dépendance ajoutée.
+- Tentative de diagnostic réellement exécutée : socket refusée avant navigateur, rapport `/tmp/pharmagest-ux-report-ghyjmdhn`. Les douze reproductions restent non exécutées ; attendre le rapport du poste utilisateur. Lots 2 à 7 non terminés ; lot 8 non autorisé et non commencé.
+
+Vérification actuelle sur la copie `fix/recette-frontend` : **85 tests Django réussis en 158,053 s**, check Django sans anomalie, `makemigrations --check --dry-run` sans changement, **12 tests cashier_math + 9 tests operation_math réussis**, syntaxe Node et compilation Python valides. Préparation : **45 rendus serveur**. Ces résultats ne valident pas les douze cas navigateur non exécutés. Commit de test : `a83f1df`. La branche sera transférable par bundle local ; aucun merge ni push effectué et main du dépôt actif préservé.
+
+### Rapport utilisateur 426mt8qc — lot 1
+
+Branche fix/recette-frontend importée et active dans le dépôt utilisateur à 5db7d4a. Rapport lu : 11 OK / 1 KO ; assistant 4/4, dashboard 7/8. KO unique : souris à 360 px sans scripts applicatifs, dates valides, URL inchangée et focus sur date de fin. Cause indéterminée, aucun correctif applicatif. Diagnostic de ce seul cas sur cinq passages préparé, avec traces de navigation, événements/positions et capture avant activation. Syntaxe Node, compilation Python et diff vérifiés ; nouvelles observations navigateur non exécutées ici. Aucun nouveau passage complet des tests Django pour ces seules modifications d'outillage.
+
+## Lot 2 en cours — après rapport 8d0__y96
+
+L'utilisateur autorise le report du clic de période sans JS (4 KO / 5, cause non démontrée) afin de continuer. Nouveau mode `--matrix` : 45 routes × deux thèmes × quatre largeurs × deux modes JS = 720 cas prévus pour cinq rôles. Assertions de présentation, captures et résultats par cas, poursuite malgré les défauts de page/rôle. Aucune promesse de recette métier complète : défaut connu et inspections manuelles restent déclarés.
+
+Tentative locale réelle : socket refusé avant navigateur, rapport kfbqsr68. Nouvelle commande sur le poste : `.venv/bin/python tools/run_ux_review.py --matrix`. Les résultats restent non exécutés jusqu'au retour du poste. Aucun correctif produit, vue/service/modèle/permission/migration modifié.
+
+Vérification de la préparation du lot 2 : 45 rendus serveur réussis via `--prepare-only` (rapport 9yh2w_nv), syntaxe Node du nouveau script, compilation Python et diff sans erreur. Aucun passage navigateur de la matrice réussi ni revendiqué ici.
+
+## Hypothèse serveur de recette et métadonnées — 30 octobre 2026
+
+- Serveur de recette mono-thread confirmé par lecture ; comparaison instrumentée single/threaded (ThreadedWSGIServer Django), journaux connexions/en-têtes/réponses UTC dans requests.jsonl et compteurs/passage dans summary.json. Threaded devient le défaut du lanceur, single reste disponible comme témoin ; cause du défaut non démontrée.
+- Tentatives 10 puis 20 passages : refus de socket avant écoute, zéro passage navigateur exécuté et zéro requête HTTP reçue ; rapports n01o0e0c et 01vc845r. Exécuter les deux commandes du guide RECETTE_UX sur le poste et attendre les deux rapports avant de conclure.
+- Favicon SVG local et lien global ajoutés ; meta theme-color clair/sombre et synchronisation manuelle/système/onglets. SVG servi en 200 dans un test WSGI sans socket ; comportement automatique favicon du navigateur non vérifié.
+- Contrôles réels : trois tests Python d'outillage, cinq tests Node du thème, 21 tests JS existants ; 12 tests Django ciblés, puis deux tests métadonnées après ajout du test statique ; check, syntaxe et compilation sans anomalie. Suite complète non rejouée. Aucune vue/modèle/service/permission/migration modifié, aucun push.
+
+## Retour comparatif réel — 2 novembre 2026
+
+- Rapports _0hmnjzp/e8jza826 : single 1 OK/9 KO (85 requêtes toutes terminées), threaded 0 OK/20 KO (154 requêtes toutes terminées). Aucune connexion acceptée sans en-têtes. Un GET de période en single, aucun en threaded. Les 29 KO précèdent le GET et signalent l'attente de stabilité du clic ; validité du formulaire vraie.
+- L'hypothèse préchauffage/serveur n'est pas soutenue par ce comparatif. Aucune cause alternative encore démontrée et aucun correctif produit justifié.
+- Nouveau témoin sans serveur ni base : `--probe-browser`, bouton statique, JS/sans JS, rAF/géométrie/focus, versions et traces sans authentification. Écart de versions observé (Playwright 1.50.1/Chrome 145 ; package prévu pour Chromium 133), à vérifier avec le témoin avant toute conclusion.
+- Tentative locale : Chrome bloqué au lancement, rapport wjqmsqcq. Syntaxe, compilation, trois tests de journalisation (0,125 s) et diff validés ; aucun cas navigateur de ce témoin exécuté. Commande poste : `.venv/bin/python tools/run_ux_review.py --probe-browser`. Pas de push ni changement métier.
+
+## Témoin navigateur reçu — 2 novembre 2026
+
+Rapport m7tpz2it : clic normal réussi dans les deux cas JS/sans JS, géométrie stable. Pas de panne générale du locator ni de preuve de causalité de l'écart de versions. rAF main-world=0 sans JS malgré clic réussi, donc ne pas en déduire une panne de Playwright. Étape suivante : témoin étendu comparant viewport/hors écran et défilement auto/smooth, six cas à exécuter via --probe-browser. Règle smooth de Bootstrap confirmée par lecture, causalité encore à démontrer ; aucun correctif applicatif.
+
+## Condition isolée et correctif du défilement — 2 novembre 2026
+
+Rapport olrbhn5i inspecté : six variantes de témoin, cinq clics locator OK et un KO uniquement hors écran/smooth/sans JS ; géométrie document fixe. La règle Bootstrap smooth est présente dans le produit. Correctif minimal appliqué dans app.css : root scroll-behavior:auto ; diagnostic enrichi de la valeur calculée. Aucun changement de formulaire, vue, modèle, service, permission ou migration.
+
+La condition est démontrée sur témoin, succès après correction sur l'application toujours à mesurer : demander vingt passages du diagnostic réel. Ne pas transformer l'attendu vingt OK en résultat. Les six variantes ne démontrent pas la cause de l'ancien incident d'assistant ; les quatre essais assistant du rapport 426mt8qc étaient OK, sans reproduction de cet ancien incident.
+
+Contrôles après correction : 13 tests ciblés réussis (23,291 s), check Django, syntaxe Node et diff sans erreur. Validation du clic après correction toujours attendue sur le poste.
+
+## Clic résolu, recette complète en cours — 2 novembre 2026
+
+Rapport dbxll7ue vérifié : 20 exécutés/20 OK/0 KO, scrollBehavior=auto, vingt GET de période parmi 174 requêtes. Comparatif threaded avant/après : 0/20 puis 20/20 ; condition smooth/sans JS/hors viewport isolée par le témoin. Défaut précis clos dans le périmètre testé.
+
+Le mode --matrix est actualisé : le défaut n'est plus déclaré ouvert et le statut de réussite automatique distingue l'examen manuel encore attendu. Tentative locale wvpnl77f : socket refusé, aucun cas navigateur exécuté ; commande poste --matrix. Syntaxe Node, compilation Python et diff vérifiés. Aucun nouveau changement applicatif, commit, merge ou push pour cette reprise.
+
+## Matrice complète vérifiée — 2 novembre 2026
+
+Rapport uwt80wl_ : 720/720 pages OK selon assertions communes, cinq rôles, quatre largeurs, deux thèmes, JS/sans JS ; 1534 HTTP reçus, 720 captures présentes. Détail complet et empreintes des JSON ajoutés à RECETTE_UX. Inspection manuelle de trois captures : défaut de compression du tableau de stocks à 768 px malgré le passage automatique. Retouche minimale de largeur/colonnes appliquée, validation serveur réussie (un test, 2,044 s) ; nouvelle recette ciblée --matrix --role stock et examen de captures à faire après cette retouche.
+
+Checkpoint QA commit possible en distinguant ce qui est vérifié de ce qui reste : pas de validation exhaustive visuelle, lecteur d'écran, impression/PDF ni chronométrage de caisse. Avant de clore la retouche stocks, attendre sa capture récente. Aucun commit/push exécuté lors de cette vérification.
+
+Contrôles actuels du checkpoint : **87 tests Django réussis (157,887 s)**, **3 tests Python d'outillage** et **26 tests JS** réussis ; check Django, `makemigrations --check --dry-run` et diff sans anomalie. Les 720 réussites navigateur précèdent la retouche stock ; ne pas la considérer visuellement validée sans nouvelle capture.
+
+## 2 novembre 2026 — Contrôle stocks et intégration autorisée
+
+Rapport 4_0pr859 vérifié : 144 cas du rôle stock, tous OK après retouche du tableau. Cette réussite automatique ne remplace pas l'examen visuel exhaustif. L'utilisateur autorise maintenant le commit dans fix/recette-frontend puis la fusion dans main, sans demande de push. Tentative git add refusée : .git/index.lock en lecture seule. Aucun commit ni fusion effectué dans le dépôt actif par l'agent ; commandes à exécuter dans le terminal utilisateur.
