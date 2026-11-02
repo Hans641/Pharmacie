@@ -1281,3 +1281,7 @@ Colonnes Actions et invites de téléchargement masquées sur papier par no-prin
 ### Rapport cinq rôles 5wjmy_iw reçu et vérifié
 
 **720/720 cas OK** après les retouches papier, 47 038 mesures de contraste au repos >=4,5:1 (minimum 5,4348), 24 contrôles désactivés exclus ; 720 captures et 52 PDF présents. Texte des 52 PDF contrôlé, trois rendus sombres examinés : colonnes Actions et invites PDF retirées. Tous les documents tiennent sur une page ; aucun résultat multipage/ReportLab revendiqué. Bilan par rôle, preuves et empreintes dans [RECETTE_PRESENTATION.md](RECETTE_PRESENTATION.md). Les tests d’états, zoom, authentification/erreurs, lecteur d’écran et chronométrage restent distincts.
+
+## 2 novembre 2026 — Accessibilité complémentaire validée sur l’hôte
+
+Rapport f2gyt6jp inspecté : 112/112 OK, 112 captures, focus actif/contour 3px dans tous les cas ; 1 024 ratios >=4,5 (minimum 5,6320), seize vérifications d’erreurs locales JS, 1 064 HTTP terminés. Deux captures sombres examinées (connexion sans JS 360 et template 500 JS 768). Défaut de contour et faux échec du bouton hidden clos dans le périmètre testé. Zoom réel 200 %, lecteur d’écran, dialogues métier, handlers HTTP réels et liens de réinitialisation restent ouverts. Tableau et empreinte dans RECETTE_PRESENTATION.md. Aucun nouveau test applicatif ni commit/merge/push.

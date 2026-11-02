@@ -81,3 +81,23 @@ Le témoin olrbhn5i isole un échec du clic dans le cas hors écran/smooth/sans 
 ## 2 novembre 2026 — Retirer les actions des documents HTML imprimés
 
 Les captures PDF kqi1nqyl démontrent des colonnes Actions vides et invites PDF imprimées. Réutiliser la classe no-print sur les éléments ciblés, conserver les références et descriptions utiles. Séparer la cellule Total de l’action dans le pied du tableau d’achat pour garder les six colonnes imprimables cohérentes. Ajouter des contrôles DOM d’impression spécifiques ; ne pas toucher aux permissions ni aux PDF ReportLab.
+
+## 2 novembre 2026 — Tester les erreurs sans panne volontaire
+
+Rendre les templates 403/404/500 avec RequestFactory et AnonymousUser dans le répertoire temporaire du lanceur ; Playwright les examine sans modifier les routes ni provoquer de panne. Distinguer ces preuves de présentation du comportement HTTP réel. Bloquer les POST du scénario anonyme ; tester uniquement les erreurs locales. Conserver le zoom réel et le lecteur d’écran comme contrôles manuels, sans les assimiler à une réduction de viewport.
+
+## 2 novembre 2026 — Spécificité du contour de focus
+
+La règle générique :focus-visible ne peut pas écraser outline:0 de Bootstrap .btn:focus-visible. Définir le contour du design system avec ce sélecteur spécifique après Bootstrap ; mesurer le focus en modalité clavier et conserver le box-shadow dans les diagnostics. L’échec de la mesure d’outline ne prouve pas à lui seul l’absence de tout indicateur.
+
+## 2 novembre 2026 — Focus sur les contrôles visibles
+
+Le contrôle Afficher reste hidden sans JS par conception. Les tests de focus doivent sélectionner un bouton visible, tout en conservant le test séparé de ce repli sans JS. Le rapport faugqo54 démontre huit échecs active=false sur ce contrôle masqué ; correction du sélecteur de test uniquement.
+
+## 2 novembre 2026 — Recette humaine isolée
+
+Réutiliser prepare et le serveur threaded de l’outillage existant pour les essais humains ; saisir le mot de passe de test dans le terminal via getpass, sans sortie ni fichier de credentials. Garder les observations humaines séparées des compteurs HTTP. Aucun réglage CSS ou émulation de viewport ne remplace une preuve de zoom navigateur réel.
+
+## 2 novembre 2026 — Mesurer les ventes sans confusion de périmètre
+
+Chronométrage Playwright sur base temporaire uniquement ; début à la recherche, fin à confirmation HTML et lien reçu visible, PDF exclu. Conserver temps automatisés et humains séparés, médiane seulement avec cinq réussites, audits des stocks/paiements après exécution. Aucune conclusion de vitesse humaine ni de double soumission à partir de ces seuls parcours nominaux.
