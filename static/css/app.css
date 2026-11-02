@@ -82,6 +82,9 @@ button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button, a, input, select, textarea, summary { touch-action: manipulation; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+/* La règle Bootstrap .btn:focus-visible supprime l’outline générique.
+   Même spécificité, après Bootstrap : contour commun aux boutons et aux liens. */
+.btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 [hidden] { display: none !important; }
 small, .helptext, .muted, .panel-note { font-size: var(--text-sm); color: var(--muted); }
 small { display: block; }
