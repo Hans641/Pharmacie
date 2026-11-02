@@ -19,23 +19,23 @@
 <span class="metric-icon blue">{% icon 'chart' %}</span>
 <h2>Rapport des ventes</h2>
 <p>Ventes validées, chiffre d’affaires et remboursements.</p>
-<strong>Télécharger le PDF {% icon 'download' %}</strong>
+<strong class="no-print">Télécharger le PDF {% icon 'download' %}</strong>
 </a>{% endif %}{% if perms.pharmacy.view_purchase %}<a class="panel report-card" href="{% url 'report_pdf' 'purchases' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}">
 <span class="metric-icon green">{% icon 'truck' %}</span>
 <h2>Rapport des achats</h2>
 <p>Montants des marchandises effectivement réceptionnées.</p>
-<strong>Télécharger le PDF {% icon 'download' %}</strong>
+<strong class="no-print">Télécharger le PDF {% icon 'download' %}</strong>
 </a>{% endif %}{% if perms.pharmacy.view_lot %}<a class="panel report-card" href="{% url 'report_pdf' 'stock' %}">
 <span class="metric-icon amber">{% icon 'box' %}</span>
 <h2>État du stock</h2>
 <p>Situation actuelle par médicament, lot et date de péremption.</p>
-<strong>Télécharger le PDF {% icon 'download' %}</strong>
+<strong class="no-print">Télécharger le PDF {% icon 'download' %}</strong>
 </a>
 <a class="panel report-card" href="{% url 'report_pdf' 'expiry' %}">
 <span class="metric-icon rose">{% icon 'clock' %}</span>
 <h2>Suivi des péremptions</h2>
 <p>Lots périmés ou à échéance dans les 90 prochains jours.</p>
-<strong>Télécharger le PDF {% icon 'download' %}</strong>
+<strong class="no-print">Télécharger le PDF {% icon 'download' %}</strong>
 </a>{% endif %}</div>
 <p class="muted">Les reçus, factures et bons de commande sont disponibles sur la fiche de chaque opération.</p>
 {% endblock %}

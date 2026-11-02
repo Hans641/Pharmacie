@@ -159,3 +159,27 @@ Le catalogue à 768 px passe après correction ; 20 parcours de page avec JS son
 ## 2 novembre 2026 — Contrôle stocks et intégration autorisée
 
 Rapport 4_0pr859 vérifié : 144 cas du rôle stock, tous OK après retouche du tableau. Cette réussite automatique ne remplace pas l'examen visuel exhaustif. L'utilisateur autorise maintenant le commit dans fix/recette-frontend puis la fusion dans main, sans demande de push. Tentative git add refusée : .git/index.lock en lecture seule. Aucun commit ni fusion effectué dans le dépôt actif par l'agent ; commandes à exécuter dans le terminal utilisateur.
+
+## 2 novembre 2026 — Reprise du lot 3 après fusion
+
+- Git vérifié : main propre à 3b28d08, référence locale origin/main identique ; fusion frontend confirmée. Les commandes historiques précédemment fournies ont donc été intégrées dans le dépôt utilisateur. Aucun accès réseau ni push par l’agent.
+- Trois captures examinées : stock sombre sans JS 768 récent (noms lisibles), caisse sombre JS 360, achat partiel sombre JS 1280. Pas de validation exhaustive ni d’impression déduite de ces images.
+- Option --matrix --presentation et module de mesure des contrastes/impression ajoutés, avec cinq tests mathématiques réussis. Inventaire documenté : 39 tokens et quatre effets RGB légitimes, sur 43 occurrences. Aucun changement de fichier applicatif.
+- Tentative navigateur fkt1jp4z : refus de socket, zéro requête, aucun rôle exécuté. Commande poste et exclusions dans RECETTE_PRESENTATION.md. Check Django, syntaxe et diff vérifiés ; suite Django complète non rejouée pour ces outils/docs. Aucun commit/merge/push.
+
+## 2 novembre 2026 — Rapport présentation et commit demandé
+
+- Rapport hôte kqi1nqyl lu : 176/176 pages administrateur OK, 11 536 ratios au repos tous >=4,5 (minimum 5,4348), huit contrôles désactivés exclus, 342 HTTP terminés, 176 captures et 12 PDF/captures présents.
+- Trois PDF sombres JS convertis et inspectés (vente brouillon, achat partiel, page de liens rapports), chacun une page. Lisibilité/fond clair confirmés sur ces exemples ; colonnes Actions vides et liens imprimés à améliorer. Pas de preuve des rapports métier ReportLab ni multipage.
+- Cinq tests JS relancés avec succès ; check Django, syntaxe Node, compilation Python et diff vérifiés. Pas de nouveau passage complet Django. Bilan, matrice agrégée et empreinte enregistrés dans RECETTE_PRESENTATION.md.
+- Utilisateur autorise un commit dans une branche. git switch -c test/recette-presentation échoue sur écriture des refs ; aucun contournement, commit, merge ou push. Commandes finales destinées au terminal utilisateur.
+
+## 2 novembre 2026 — Retouches ciblées avant recette des cinq rôles
+
+- Commit bbe1005 confirmé sur test/recette-presentation, dossier initialement propre. Réutilisation de no-print dans les fiches vente/achat et la page rapports pour les défauts papier prouvés par kqi1nqyl ; assertions de non-régression ajoutées à la recette navigateur.
+- 11 tests PresentationTests réussis (20,248 s), cinq tests JS de contraste réussis, syntaxe Node, check Django et diff valides. Fichiers backend protégés sans diff.
+- Tentative --matrix --presentation --role administrateur bloquée avant serveur, rapport 2obe37jh, zéro requête. Validation après correction non exécutée ; commande poste pour les cinq rôles : --matrix --presentation. Aucun nouveau commit/merge/push.
+
+## 2 novembre 2026 — Recette présentation des cinq rôles vérifiée
+
+Rapport hôte 5wjmy_iw vérifié : cinq rôles, 720/720 cas OK, 720 captures, 1 534 HTTP terminés, 47 038 mesures de contraste au repos >=4,5 (minimum 5,4348), 24 contrôles désactivés exclus. Les 52 PDF HTML sont présents et tiennent chacun sur une page ; texte extrait de tous sans colonne Actions ni invite de téléchargement. Trois PDF sombres administrateur convertis et inspectés : retouches visuellement confirmées. Détail/empreintes dans RECETTE_PRESENTATION.md. Multipage, reçu encaissé, ReportLab, états exhaustifs, zoom et lecteur d’écran restent ouverts. Aucun nouveau test applicatif ni commit/merge/push pour cette analyse.
