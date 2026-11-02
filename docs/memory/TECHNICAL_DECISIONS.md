@@ -51,3 +51,25 @@ Conserver le filtre GET serveur et le tri `expires_on, pk` ; les raccourcis de s
 ## 30 octobre 2026 — Mode sombre demandé par l'utilisateur
 
 Remplacer les couleurs figées par des tokens et centraliser les palettes dans `themes.css`, sans inversion des images. Préférence système par défaut, choix explicite partagé en pied de page et stockage local limité à `pharmagest-theme`. Fond d'action et texte d'action distincts pour préserver le contraste. Script local appliqué en tête avant le rendu principal ; fonctionnement système sans JS. Palette sombre limitée aux médias écran pour garder une impression claire. Administration Django et PDF gardent leur rendu propre.
+
+## 30 octobre 2026 — Matrice poursuivie avec défaut connu ouvert
+
+À la demande explicite de l'utilisateur, reporter le clic intermittent du dashboard sans JS et poursuivre le lot 2. Isoler les assertions communes de présentation dans un mode --matrix collectant tous les cas, sans arrêter au premier KO et sans présenter un défaut reporté comme résolu. Résultats initiaux non exécutés et contrôles différés visibles ; le succès des assertions communes ne vaut pas recette globale.
+
+## 30 octobre 2026 — Comparatif du serveur de recette
+
+Conserver un témoin mono-thread et utiliser ThreadedWSGIServer Django dans le lanceur par défaut. Même handler HTTP/1.0 et taille de file dans les deux modes pour limiter les facteurs de confusion. Tracer connexions acceptées, headers reçus et réponses, sans cookies/corps ni query sensible. Ne pas assimiler ce changement de serveur de test à une résolution du défaut tant que les mesures navigateur avant/après ne sont pas disponibles.
+
+Theme-color : deux meta avec media assurent le repli système sans JS ; leurs contenus sont synchronisés par le script existant quand l'utilisateur choisit explicitement clair/sombre. Favicon local déclaré dans base.html ; aucune nouvelle route applicative nécessaire pour cette balise.
+
+## 2 novembre 2026 — Isoler l'automatisation avant de modifier le produit
+
+Le comparatif réel ne montre ni amélioration threaded ni connexion sans en-têtes. Tester un bouton statique sans serveur/base avec les mêmes paramètres JS et consigner les versions navigateur/Playwright. Le clic physique de référence et les archives de trace ne sont permis ici que sur cette page synthétique sans authentification ; aucun contournement du clic normal de la recette produit, aucune mise à jour de dépendance sans preuve de nécessité.
+
+## 2 novembre 2026 — Défilement immédiat par défaut
+
+Le témoin olrbhn5i isole un échec du clic dans le cas hors écran/smooth/sans JS, contrairement au même cas avec auto. Surcharger la règle globale Bootstrap dans app.css pour adopter scroll-behavior:auto. Garder le clic Playwright normal comme critère de validation ; pas de force ni de sleep. Vérifier ensuite le succès sur la vraie page avant de clôturer le défaut.
+
+## 2 novembre 2026 — Assertions automatiques et lisibilité des tableaux
+
+720 pages passent les assertions communes, mais la capture stocks 768 px montre des noms morcelés : l'absence de débordement ne prouve pas la lisibilité. Réutiliser la largeur minimale du catalogue pour le tableau stock au-dessus de 600 px, et préserver le défilement interne. Documenter les résultats automatiques et visuels séparément ; recette ciblée après retouche requise avant clôture.
