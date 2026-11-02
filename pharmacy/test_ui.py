@@ -573,3 +573,34 @@ class StockClarityTests(Fixtures, TestCase):
         self.assertNotContains(response, f'href="/catalogue/medicaments/{self.med.pk}/"')
         self.assertNotContains(response, f'href="/stocks/{lot.pk}/inventaire/"')
         self.assertNotContains(response, 'Voir les commandes')
+
+
+class BrowserMetadataTests(TestCase):
+    def test_login_has_local_favicon_and_system_theme_colors(self):
+        from django.contrib.staticfiles import finders
+        from pathlib import Path
+        import xml.etree.ElementTree as ET
+        response = self.client.get('/comptes/login/')
+        self.assertContains(response, 'rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg"')
+        self.assertContains(response, 'name="theme-color" content="#f4f7f5" media="(prefers-color-scheme: light)"')
+        self.assertContains(response, 'name="theme-color" content="#101916" media="(prefers-color-scheme: dark)"')
+        self.assertEqual(ET.fromstring(Path(finders.find('icons/favicon.svg')).read_text()).tag, '{http://www.w3.org/2000/svg}svg')
+
+    def test_favicon_is_served_by_local_static_handler(self):
+        from django.contrib.staticfiles.handlers import StaticFilesHandler
+        from django.core.wsgi import get_wsgi_application
+        from django.test import RequestFactory
+        status = []
+        headers = []
+        def start_response(line, values, exc_info=None):
+            status.append(line)
+            headers.extend(values)
+        response = StaticFilesHandler(get_wsgi_application())(
+            RequestFactory().get('/static/icons/favicon.svg').environ, start_response)
+        try:
+            content = b''.join(response)
+        finally:
+            response.close()
+        self.assertEqual(status, ['200 OK'])
+        self.assertTrue(dict(headers)['Content-Type'].startswith('image/svg+xml'))
+        self.assertIn(b'<svg', content)
