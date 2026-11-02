@@ -189,3 +189,63 @@ Les défauts précis d’impression sont résolus dans ce périmètre. La vente 
 - `gestion/matrix.json` : `bf3e52c21d093275bb3c2636b8cbe0e2bc84187c7e2225ddf64f2b354ac7bb89`
 - `pharmacien/matrix.json` : `e280f441eb38a32663ec40e340f20d6ae2407e11f977e0edd269b23ae1799ab5`
 - `stock/matrix.json` : `5ebdbaa61fcbd3e0bf3376682c62500b8a865113fc627241e85b84fdd9d513e6`
+
+## 2 novembre 2026 — Complément authentification et accessibilité
+
+Fusion précédente confirmée sur main à `9bf65ad`, dossier initialement propre. Nouveau mode de recette :
+
+```bash
+.venv/bin/python tools/run_ux_review.py --accessibility
+```
+
+112 cas prévus : sept pages × quatre largeurs × deux thèmes × JS/sans JS. Pages HTTP anonymes : connexion, demande de réinitialisation, confirmation de demande et fin de réinitialisation. Les trois autres cas sont les templates 403/404/500 rendus isolément par Django avec un utilisateur anonyme, chargés par Playwright sur l’origine locale ; **ils ne prouvent pas le comportement des handlers HTTP ni le traitement réel d’une erreur**. Aucun POST n’est autorisé dans ces contextes navigateur. Les erreurs testées sont locales, avant soumission, sans connexion réelle ni envoi de courriel.
+
+Assertions : langue/titre H1, schéma rendu, débordement, focus visible et transition réduite du premier bouton ; affichage/masquage du mot de passe au clavier et aria-pressed ; erreur inline/focus après formulaire vide avec JS ; contrastes des textes mesurables après ces interactions. Les états non mesurables restent consignés par le module de contrastes. Captures et verdicts par cas dans `administrateur/accessibility.json`, initialisés non exécutés et enregistrés progressivement.
+
+Tentative locale réellement exécutée : `/tmp/pharmagest-ux-report-ru1ddq2f`, socket refusée avant serveur ; zéro requête et **aucun cas navigateur exécuté**. Rendus isolés préparés avant ce refus. Syntaxe Node/Python, check Django, diff et cinq tests de calcul de contrastes vérifiés ; suite Django complète non rejouée. Aucun composant, modèle, vue, service ou permission modifié. Aucun commit/merge/push.
+
+### Vérifications manuelles encore nécessaires
+
+- Sur une base fictive, ouvrir caisse et formulaire aux quatre largeurs, régler le zoom du navigateur à 200 % via son menu et relever le zoom réellement affiché ; faire séparément un passage avec texte agrandi seul. Vérifier labels, erreurs, boutons et total accessibles sans chevauchement. Une simulation de viewport ou un facteur de résolution ne prouve pas le zoom.
+- Parcourir au clavier tous les champs et actions, dialogue compris ; vérifier Échap, retour du focus et absence de soumission en annulant. Ne jamais encaisser ou réceptionner sur la base active.
+- Examiner les états natifs ouverts (select/date), désactivation, erreurs serveur, réinitialisation avec lien valide/invalide et lecteur d’écran. Ces parcours ne sont pas couverts par le nouveau mode.
+
+Attendre le rapport hôte avant de conclure à la réussite des nouveaux cas. La recette ne constitue pas une certification WCAG.
+
+## 2 novembre 2026 — Rapport accessibilité e5mzo9ly : arrêt commun au focus
+
+Rapport lu : 112/112 KO, tous à l’assertion « Focus visible », outline calculé 0px/none sur le premier bouton. Les assertions suivantes (survol, mot de passe, validation locale et contrastes) n’ont pas été atteintes. Ne pas assimiler ces résultats à 112 défauts indépendants.
+
+Cause de cascade confirmée dans Bootstrap local : `.btn:focus-visible` impose `outline:0`, plus spécifique que la règle générique `:focus-visible` de app.css. Un box-shadow Bootstrap peut exister : le rapport précédent ne le mesurait pas, donc aucune conclusion d’absence totale d’indicateur. Correction : règle `.btn:focus-visible` de même spécificité après Bootstrap, contour de 3px avec le token focus. Script corrigé pour activer explicitement la modalité clavier, enregistrer activeElement/:focus-visible/box-shadow et afficher les erreurs dans le terminal. Aucune suppression de l’assertion ni changement métier.
+
+Syntaxe Node, check Django et diff vérifiés. La validation navigateur après correction reste à obtenir ; commande : `.venv/bin/python tools/run_ux_review.py --accessibility`. Aucun succès après correction revendiqué, aucun commit/merge/push.
+
+## 2 novembre 2026 — Rapport faugqo54 : 104 OK / 8 KO
+
+Rapport accessibility.json lu : 104 réussites et huit échecs, exclusivement connexion sans JS aux quatre largeurs et deux thèmes. Dans les huit cas, active=false et :focus-visible=false. Le sélecteur `main .btn` choisissait le bouton Afficher du mot de passe, présent dans le template mais hidden sans JS ; le template includes/field.html et le script app.js confirment ce repli intentionnel. Le script essayait donc de focaliser un contrôle masqué. Aucun défaut produit déduit de ces huit échecs.
+
+Correction d’outillage uniquement : `main .btn:visible`, ajout du libellé du contrôle mesuré au diagnostic. L’assertion exigeant que le bouton Afficher soit masqué sans JS est conservée, ainsi que tous les contrôles de focus. Les 104 cas réussis confirment le contour de focus de 3px dans le périmètre testé ; les assertions après l’échec des huit cas n’ont pas été exécutées.
+
+Syntaxe Node et git diff --check vérifiés. Validation après cette dernière correction encore attendue : `.venv/bin/python tools/run_ux_review.py --accessibility`. Aucun nouveau test Django complet, commit, merge ou push. Ne pas transformer 104 réussites et huit corrections attendues en 112 réussites mesurées.
+
+## 2 novembre 2026 — Rapport f2gyt6jp : 112 cas réussis
+
+Rapport hôte lu : **112/112 OK**, 112 captures présentes et 1 064 requêtes reçues/terminées. Dans les 112 cas, le contrôle testé est actif avec contour de focus de 3px. Les 1 024 mesures de contraste après interactions sont OK (minimum 5,6320:1). Seize cas JS vérifient une erreur locale et le focus sur le champ invalide. Afficher/masquer et son repli sans JS passent dans les cas de connexion. Ce ne sont pas des tests d’envoi de courriel ni de connexion réelle.
+
+| Page | Cas OK / exécutés | Nature de la preuve |
+|---|---:|---|
+| `/comptes/login/` | 16/16 | Page HTTP anonyme |
+| `/comptes/password_reset/` | 16/16 | Page HTTP anonyme |
+| `/comptes/password_reset/done/` | 16/16 | Page HTTP anonyme |
+| `/comptes/reset/done/` | 16/16 | Page HTTP anonyme |
+| `template-403` | 16/16 | Rendu isolé du template |
+| `template-404` | 16/16 | Rendu isolé du template |
+| `template-500` | 16/16 | Rendu isolé du template |
+
+Deux captures sombres inspectées : connexion sans JS à 360 px (bouton Se connecter focalisé, Afficher absent) et template 500 avec JS à 768 px (retour accueil focalisé), lisibles sans débordement visible. Fichiers sous `/tmp/pharmagest-ux-report-f2gyt6jp/administrateur/` : `dark-sans-js-360-_comptes_login_.png`, `dark-js-768-template_500.png`.
+
+Le défaut de contour et le faux échec du bouton masqué sont clos dans ce périmètre. Limites maintenues : zoom navigateur réel 200 %, texte agrandi, lecteur d’écran/ordre complet, dialogues métier/contrôles natifs ouverts, handlers HTTP réels 403/404/500 et liens de réinitialisation valides/invalides. Le lot 3 n’est pas déclaré intégralement terminé. Aucun nouveau test applicatif, commit, merge ou push lors de cette analyse.
+
+Preuve : `/tmp/pharmagest-ux-report-f2gyt6jp/administrateur/accessibility.json` ; SHA-256 : `668b70600a7edb1bf0f5c8b8e5ac4d637fcc12d5bb118a4a7959749c0ccb3cad`.
+
+Prochaine recette humaine : [RECETTE_ZOOM_CLAVIER.md](RECETTE_ZOOM_CLAVIER.md), avec serveur fictif interactif `tools/run_manual_review.py`. Protocole préparé, résultats non exécutés.

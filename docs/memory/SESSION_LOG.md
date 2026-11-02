@@ -183,3 +183,43 @@ Rapport 4_0pr859 vérifié : 144 cas du rôle stock, tous OK après retouche du 
 ## 2 novembre 2026 — Recette présentation des cinq rôles vérifiée
 
 Rapport hôte 5wjmy_iw vérifié : cinq rôles, 720/720 cas OK, 720 captures, 1 534 HTTP terminés, 47 038 mesures de contraste au repos >=4,5 (minimum 5,4348), 24 contrôles désactivés exclus. Les 52 PDF HTML sont présents et tiennent chacun sur une page ; texte extrait de tous sans colonne Actions ni invite de téléchargement. Trois PDF sombres administrateur convertis et inspectés : retouches visuellement confirmées. Détail/empreintes dans RECETTE_PRESENTATION.md. Multipage, reçu encaissé, ReportLab, états exhaustifs, zoom et lecteur d’écran restent ouverts. Aucun nouveau test applicatif ni commit/merge/push pour cette analyse.
+
+## 2 novembre 2026 — Recette authentification/erreurs préparée
+
+Main propre à 9bf65ad avant tâche : fusion précédente confirmée. Nouveau mode --accessibility, 112 cas prévus (connexion/réinitialisation et rendus isolés des templates 403/404/500). Vérifications clavier, mot de passe, erreurs locales, contrastes et mouvement réduit ; aucun POST navigateur. Tentative ru1ddq2f bloquée par socket avant serveur, zéro cas exécuté. Cinq tests de calcul, check Django, syntaxe et diff valides ; suite Django complète non rejouée. Prochaine commande hôte : `.venv/bin/python tools/run_ux_review.py --accessibility`. Zoom réel, lecteur d’écran, handlers d’erreur HTTP et autres interactions restent ouverts. Détail dans RECETTE_PRESENTATION.md. Aucun changement applicatif ni commit/merge/push.
+
+## 2 novembre 2026 — Rapport accessibilité e5mzo9ly : arrêt commun au focus
+
+Rapport lu : 112/112 KO, tous à l’assertion « Focus visible », outline calculé 0px/none sur le premier bouton. Les assertions suivantes (survol, mot de passe, validation locale et contrastes) n’ont pas été atteintes. Ne pas assimiler ces résultats à 112 défauts indépendants.
+
+Cause de cascade confirmée dans Bootstrap local : `.btn:focus-visible` impose `outline:0`, plus spécifique que la règle générique `:focus-visible` de app.css. Un box-shadow Bootstrap peut exister : le rapport précédent ne le mesurait pas, donc aucune conclusion d’absence totale d’indicateur. Correction : règle `.btn:focus-visible` de même spécificité après Bootstrap, contour de 3px avec le token focus. Script corrigé pour activer explicitement la modalité clavier, enregistrer activeElement/:focus-visible/box-shadow et afficher les erreurs dans le terminal. Aucune suppression de l’assertion ni changement métier.
+
+Syntaxe Node, check Django et diff vérifiés. La validation navigateur après correction reste à obtenir ; commande : `.venv/bin/python tools/run_ux_review.py --accessibility`. Aucun succès après correction revendiqué, aucun commit/merge/push.
+
+## 2 novembre 2026 — Rapport faugqo54 : 104 OK / 8 KO
+
+Rapport accessibility.json lu : 104 réussites et huit échecs, exclusivement connexion sans JS aux quatre largeurs et deux thèmes. Dans les huit cas, active=false et :focus-visible=false. Le sélecteur `main .btn` choisissait le bouton Afficher du mot de passe, présent dans le template mais hidden sans JS ; le template includes/field.html et le script app.js confirment ce repli intentionnel. Le script essayait donc de focaliser un contrôle masqué. Aucun défaut produit déduit de ces huit échecs.
+
+Correction d’outillage uniquement : `main .btn:visible`, ajout du libellé du contrôle mesuré au diagnostic. L’assertion exigeant que le bouton Afficher soit masqué sans JS est conservée, ainsi que tous les contrôles de focus. Les 104 cas réussis confirment le contour de focus de 3px dans le périmètre testé ; les assertions après l’échec des huit cas n’ont pas été exécutées.
+
+Syntaxe Node et git diff --check vérifiés. Validation après cette dernière correction encore attendue : `.venv/bin/python tools/run_ux_review.py --accessibility`. Aucun nouveau test Django complet, commit, merge ou push. Ne pas transformer 104 réussites et huit corrections attendues en 112 réussites mesurées.
+
+## 2 novembre 2026 — Accessibilité complémentaire validée sur l’hôte
+
+Rapport f2gyt6jp inspecté : 112/112 OK, 112 captures, focus actif/contour 3px dans tous les cas ; 1 024 ratios >=4,5 (minimum 5,6320), seize vérifications d’erreurs locales JS, 1 064 HTTP terminés. Deux captures sombres examinées (connexion sans JS 360 et template 500 JS 768). Défaut de contour et faux échec du bouton hidden clos dans le périmètre testé. Zoom réel 200 %, lecteur d’écran, dialogues métier, handlers HTTP réels et liens de réinitialisation restent ouverts. Tableau et empreinte dans RECETTE_PRESENTATION.md. Aucun nouveau test applicatif ni commit/merge/push.
+
+## 2 novembre 2026 — Recette humaine zoom/clavier préparée
+
+Ajout de tools/run_manual_review.py : réutilisation de la préparation fictive isolée et du serveur threaded existants, mot de passe temporaire saisi sans écho (jamais journalisé), serveur ouvert jusqu’à Entrée/Ctrl+C puis nettoyage. Aucun fichier applicatif modifié. Protocole détaillé dans docs/RECETTE_ZOOM_CLAVIER.md : commencer à 1280 px, zoom navigateur réel 200 %, caisse/formulaire, dialogue inventaire annulé par Échap/Revenir, puis autres thèmes/largeurs et texte seul. Résultats manuels non exécutés, utilisateur requis. Aide CLI, compilation Python et diff vérifiés ; serveur interactif et parcours navigateur de ce lanceur non exécutés ici. Aucun commit/merge/push.
+
+## 2 novembre 2026 — Début du lot chronométrage
+
+L’utilisateur indique les trois parcours manuels zoom/clavier réglés et demande de passer au point suivant. Retour utilisateur consigné sans inventer navigateur, dimensions, captures ou mesure instrumentée ; les combinaisons restantes restent non attestées.
+
+Ajout de run_cashier_benchmark.py/ux_cashier_benchmark.cjs : quinze ventes fictives isolées, trois scénarios, caissier/espèces, recherche au clavier et confirmation HTML avec lien reçu, horloge navigateur continue entre navigations ; médiane/min/max et audits paiements/stock. Protocole manuel et limites dans RECETTE_CAISSE.md. Le PDF n’est pas ouvert dans le temps mesuré ; doubles soumissions/retour restent séparés. Tentative o1xxdqyh refusée au socket, aucune durée mesurée. Syntaxe, check Django, diff et douze tests JS caisse validés. Aucun changement métier ni commit/merge/push.
+
+## 2 novembre 2026 — Checkpoint clavier et chronométrage autorisé
+
+Rapport didge5bc vérifié : 15/15 ventes automatisées OK, quinze paiements uniques, stocks conformes, quinze captures présentes. Médianes : simple 2,126 s, trois produits 4,345 s, ordonnance 2,082 s. Résultats/empreintes et bornes dans RECETTE_CAISSE.md ; aucune preuve de vitesse humaine ni doubles soumissions déduite. Recette complémentaire précédente f2gyt6jp : 112/112 OK.
+
+Utilisateur autorise commit en branche secondaire puis fusion main, sans push. Vérifications syntaxe Node/Python, check Django et diff sans erreur ; pas de nouveau passage complet Django. Tentative de création fix/qa-clavier-chronometrage refusée sur refs .git en lecture seule : aucun commit ni fusion effectué par l’agent. Commandes à exécuter dans le terminal utilisateur. Modèles/vues/services/permissions/migrations inchangés.
