@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { inspectPresentation } = require('./ux_presentation.cjs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright');
 const base = process.env.PHARMAGEST_URL;
 const output = process.env.UX_OUTPUT_DIR;
@@ -120,6 +121,26 @@ async function geometry(page) {
             row.capture = `${theme}-${js ? 'js' : 'sans-js'}-${width}-${route.replace(/[^a-z0-9]/gi, '_')}.png`;
             try { await page.screenshot({ path: path.join(output, row.capture), fullPage: true }); }
             catch (error) { row.issues.push({ check: 'capture', message: error.message }); row.result = 'KO'; row.capture = null; }
+            if (process.env.UX_PRESENTATION === '1') {
+              await check('contrastes rendus et impression', async () => {
+                const stem = `${theme}-${js ? 'js' : 'sans-js'}-${width}-${route.replace(/[^a-z0-9]/gi, '_')}`;
+                row.presentation = await inspectPresentation(page, output, stem,
+                  width === 1280 && /^\/(ventes\/\d+\/|achats\/\d+\/|rapports\/)$/.test(route));
+                assert(row.presentation.pairs.length > 0, 'Aucun texte mesurable ; inspection requise');
+                const failures = row.presentation.pairs.filter(pair => pair.result === 'KO');
+                assert.equal(failures.length, 0, `${failures.length} textes sous 4,5:1 ; voir presentation.pairs`);
+              });
+              if (row.presentation?.print) await check('structure d’impression HTML', async () => {
+                const print = row.presentation.print;
+                assert.equal(print.colorScheme, 'light');
+                assert.equal(print.background, 'rgb(255, 255, 255)');
+                assert.deepEqual(print.controls, []);
+                assert(print.headers.every(display => display === 'table-header-group'));
+                assert(print.rowsAvoidBreak);
+                assert(!print.overflow, 'Débordement horizontal du document imprimable');
+              });
+              row.result = row.issues.length ? 'KO' : 'OK';
+            }
             const index = rows.findIndex(item => item.page === route && item.theme === theme && item.width === width && item.javascript === js);
             rows[index] = row; save();
             console.log(`${row.result} ${role} ${width}px ${theme} ${js ? 'avec JS' : 'sans JS'} ${route}`);

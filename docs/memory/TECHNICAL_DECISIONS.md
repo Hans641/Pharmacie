@@ -73,3 +73,7 @@ Le témoin olrbhn5i isole un échec du clic dans le cas hors écran/smooth/sans 
 ## 2 novembre 2026 — Assertions automatiques et lisibilité des tableaux
 
 720 pages passent les assertions communes, mais la capture stocks 768 px montre des noms morcelés : l'absence de débordement ne prouve pas la lisibilité. Réutiliser la largeur minimale du catalogue pour le tableau stock au-dessus de 600 px, et préserver le défilement interne. Documenter les résultats automatiques et visuels séparément ; recette ciblée après retouche requise avant clôture.
+
+## 2 novembre 2026 — Mesurer le rendu avant de retoucher les couleurs
+
+Étendre la matrice existante par une option explicite `--presentation` : couleurs calculées du DOM et composition des fonds simples, exclusions documentées, seuil projet 4,5:1 ; impression HTML séparée des PDF ReportLab. Conserver les cas non mesurables comme inspections en attente, jamais comme réussites. Ne pas modifier les composants à partir du seul inventaire de couleurs. Aucun changement architectural.

@@ -1,6 +1,6 @@
 # État du développement
 
-Dernière reprise vérifiée : **2 novembre 2026**. Reprise QA à `main` / `27ed6f6` ; référence locale `origin/main` identique lors de l’inspection. Cela ne prouve pas à lui seul l’état distant en temps réel.
+Dernière reprise vérifiée : **2 novembre 2026**. Dépôt propre au début de la reprise à `main` / `3b28d08`, fusion QA frontend ; référence locale `origin/main` identique. Pas d’interrogation distante. Les anciens états Git ci-dessous sont historiques.
 
 ## Fonctions implémentées et preuves disponibles
 
@@ -32,22 +32,20 @@ Les tests PDF vérifient notamment réponse, type et signature ; ils ne prouvent
 
 ## Dernière étape et travail actuel
 
-Le dépôt actif est propre à `main` / `27ed6f6`, fusion de `feat/dark-mode` (`bfad35e`). La référence locale `origin/main` lui est identique ; aucun accès distant effectué pour confirmer GitHub. Les anciens passages « aucun commit » décrivent les sessions antérieures à la fusion et ne sont plus l'état actuel.
+La fusion `fix/recette-frontend` est confirmée à `3b28d08` (commits `9b2526e`, `f0fb6b7`, `ffed724`). La référence locale `origin/main` correspond ; aucun push effectué par l’agent.
 
-Nouvelle tâche : QA frontend par lots 1 à 7, sans modèle/vue/service/permission/migration modifié dans les lots 1 à 6, sans fusion/push. Clic du dashboard sans JS corrigé et validé 20/20 dans dbxll7ue après surcharge du défilement smooth. Lot 2 en cours ; autres validations encore à exécuter. Chrome et sockets refusés dans le bac à sable. Branche `fix/recette-frontend` créée depuis `27ed6f6` dans une copie isolée `/tmp/pharmagest-recette-frontend`, car le `.git` du dépôt actif est en lecture seule. Aucun déplacement de main dans le dépôt actif.
-
-Un diagnostic dédié à lancer sur le poste est préparé : `.venv/bin/python tools/run_ux_review.py --diagnose-lot1`. Il parcourt douze cas souris/clavier, à 360/768 px, avec/sans JS pour le dashboard, avec preuves de focus, validation et géométrie. Ce diagnostic n’est pas une correction ; les résultats ultérieurs et la décision utilisateur de poursuivre le lot 2 sont consignés ci-dessous. Voir le tableau de résultats du lot 1 dans `../RECETTE_UX.md`.
+Lot 1 : clic de période validé 20/20 ; lot 2 : 720 cas automatiques réussis et 144 cas stock après retouche. Lot 3 en cours : inspection de trois captures supplémentaires et préparation des mesures DOM/print via `--matrix --presentation`. Nouvelle exécution bloquée avant serveur : rapport `fkt1jp4z`, zéro requête. Résultats navigateur supplémentaires **non exécutés** ; commandes et limites dans `../RECETTE_PRESENTATION.md`. Aucun composant ni logique métier modifié pour cette reprise.
 
 ## Prochaines étapes prioritaires
 
-1. Recette réelle de caisse sur données isolées, aux largeurs 360, 768, 1280 et 1920 px : clavier, focus, mobile, erreurs, paiement, ordonnance, impression et absence de double soumission. Suivre `../RECETTE_CAISSE.md` et `../RECETTE_UX.md` ; documenter les résultats plutôt que supposer la réussite.
-2. Mesurer plusieurs ventes fictives représentatives et vérifier l’objectif de 30 secondes.
-3. Après la recette du dashboard clarifié, poursuivre les stocks/listes, après inspection des améliorations déjà présentes. Comparer au plan `../AUDIT_UX.md` et ne pas refaire les composants existants.
-4. Avant exploitation : SMTP, HTTPS/serveur WSGI, protection des tentatives de connexion, supervision, sauvegardes hors machine, validation locale des documents/procédures ; voir `../EXPLOITATION.md`.
+1. Exécuter `--matrix --presentation --role administrateur`, examiner les contrastes et documents HTML imprimés ; poursuivre les autres rôles et les contrôles manuels (états, authentification/erreurs, zoom, lecteur d’écran).
+2. Chronométrer les trois scénarios de caisse sur données isolées, cinq passages chacun ; vérifier doubles soumissions et retour navigateur (lot 4).
+3. Générer et inspecter les PDF ReportLab, y compris tableaux multipages (lot 5), puis achever les petits contrôles d’accessibilité et la recette finale.
+4. Avant exploitation : SMTP, HTTPS/serveur WSGI, protection des tentatives de connexion, supervision et sauvegardes ; voir `../EXPLOITATION.md`.
 
 ## Non réalisé ou incertain
 
-Pas de multi-tenant, SaaS rizicole, paiement partiel, intégration prestataire, comptabilité générale, prescription automatique, mode hors ligne complet ou scanner caméra. Pas de validation navigateur complète, de conformité WCAG 2.2 AA attestée, de certification fiscale ni de déploiement de production démontré. Le fonctionnement des ressources locales n’implique pas une application hors ligne.
+Pas de multi-tenant, SaaS rizicole, paiement partiel, intégration prestataire, comptabilité générale, prescription automatique, mode hors ligne complet ou scanner caméra. Assertions communes navigateur validées, mais pas de recette visuelle/métier exhaustive, de conformité WCAG 2.2 AA attestée, de certification fiscale ni de déploiement de production démontré. Le fonctionnement des ressources locales n’implique pas une application hors ligne.
 
 ## Itération UI — tableau de bord, 30 octobre 2026
 
@@ -159,3 +157,11 @@ Contrôles actuels du checkpoint : **87 tests Django réussis (157,887 s)**, **3
 ## 2 novembre 2026 — Contrôle stocks et intégration autorisée
 
 Rapport 4_0pr859 vérifié : 144 cas du rôle stock, tous OK après retouche du tableau. Cette réussite automatique ne remplace pas l'examen visuel exhaustif. L'utilisateur autorise maintenant le commit dans fix/recette-frontend puis la fusion dans main, sans demande de push. Tentative git add refusée : .git/index.lock en lecture seule. Aucun commit ni fusion effectué dans le dépôt actif par l'agent ; commandes à exécuter dans le terminal utilisateur.
+
+## 2 novembre 2026 — Lot 3, présentation
+
+Inventaire source : 43 couleurs littérales dans app.css/experience.css, 39 tokens et quatre effets RGB légitimes ; aucune correction de couleur déduite sans mesure rendue. Stocks 768 px récents visuellement lisibles. Ajout de mesures DOM de contrastes et d’impression HTML, sans dépendance ni fichier applicatif modifié. Cinq tests de calcul réussis ; check Django, syntaxe Node/Python et diff vérifiés. Mesures navigateur non exécutées (socket refusée) ; rapport/commande dans RECETTE_PRESENTATION. Pas de nouveau passage des 87 tests Django pour ces seuls outils/documentation. Aucun commit, fusion ou push.
+
+## 2 novembre 2026 — Checkpoint présentation après rapport hôte
+
+Rapport kqi1nqyl analysé : administrateur 176/176 OK, 176 captures, 342 HTTP terminés ; 11 536 mesures de contraste au repos >=4,5:1 (minimum 5,4348), huit contrôles désactivés exclus. Douze impressions générées ; trois PDF monochapitre convertis et inspectés : lisibles, fond clair et montants français. Colonnes Actions vides et liens de téléchargement restent sur papier. Les autres rôles, multipage, états, zoom et PDF ReportLab restent ouverts. Détail et empreinte dans RECETTE_PRESENTATION.md. Cinq tests JS réussis, check/syntaxe/compilation/diff sans anomalie ; suite Django complète non rejouée. Commit autorisé, création de branche test/recette-presentation refusée (.git en lecture seule) ; aucun commit/merge/push par l’agent.

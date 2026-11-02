@@ -124,12 +124,15 @@ def main():
     parser.add_argument('--diagnose-lot1', action='store_true', help='Reproduire les deux échecs avec événements, géométrie et captures.')
     parser.add_argument('--probe-browser', action='store_true', help='Bouton témoin sans serveur, sans base ni authentification.')
     parser.add_argument('--matrix', action='store_true', help='Lot 2 : collecter les pages des deux thèmes sans arrêter au premier défaut.')
+    parser.add_argument('--presentation', action='store_true', help='Avec --matrix : contrastes rendus et documents d’impression HTML (lot 3).')
     parser.add_argument('--server', choices=['single', 'threaded'], default='threaded', help='Comparatif serveur ; single conserve le mode mono-thread antérieur.')
     parser.add_argument('--lot1-case', choices=['all', 'dashboard-360-sans-js-mouse'], default='all')
     parser.add_argument('--lot1-repeat', type=int, choices=range(1, 21), default=1)
     parser.add_argument('--role', choices=['all', 'administrateur', 'pharmacien', 'caissier', 'stock', 'gestion'], default='all')
     parser.add_argument('--output', type=Path, help='Dossier de résultats neuf ; sinon dossier temporaire conservé.')
     args = parser.parse_args()
+    if args.presentation and not args.matrix:
+        parser.error('--presentation exige --matrix (mêmes données isolées).')
     if sum([args.diagnose_lot1, args.prepare_only, args.matrix, args.probe_browser]) > 1:
         parser.error('Les modes --diagnose-lot1, --matrix, --probe-browser et --prepare-only sont exclusifs.')
     if args.diagnose_lot1:
@@ -184,8 +187,9 @@ def main():
                             print('Recette navigateur : ' + case['role'], flush=True)
                             env = os.environ.copy()
                             # Éviter d'hériter d'une recette dirigée vers la base active.
-                            for key in ['UX_ROUTES', 'UX_WIZARD', 'PHARMAGEST_SALE_ID', 'UX_LOT1_CASE', 'UX_LOT1_REPEAT']:
+                            for key in ['UX_ROUTES', 'UX_WIZARD', 'PHARMAGEST_SALE_ID', 'UX_LOT1_CASE', 'UX_LOT1_REPEAT', 'UX_PRESENTATION']:
                                 env.pop(key, None)
+                            env['UX_PRESENTATION'] = '1' if args.presentation else '0'
                             env.update(UX_ROLE=case['role'], PLAYWRIGHT_MODULE_PATH=module, PHARMAGEST_URL=f'http://127.0.0.1:{server.server_port}',
                                        PHARMAGEST_USERNAME=case['username'], PHARMAGEST_PASSWORD=password,
                                        UX_ROUTES=','.join(case['routes']), UX_OUTPUT_DIR=str(output / case['role']),
@@ -231,6 +235,7 @@ def main():
         report.update(status='failed', error=str(error))
         raise
     finally:
+        report['presentation_requested'] = args.presentation
         if args.diagnose_lot1:
             diagnostic = output / 'administrateur/lot1.json'
             trials = json.loads(diagnostic.read_text()) if diagnostic.exists() else []
