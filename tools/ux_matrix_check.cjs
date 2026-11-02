@@ -135,6 +135,8 @@ async function geometry(page) {
                 assert.equal(print.colorScheme, 'light');
                 assert.equal(print.background, 'rgb(255, 255, 255)');
                 assert.deepEqual(print.controls, []);
+                assert.equal(print.actionHeaders, 0, 'Colonne Actions inutile à l’impression');
+                assert.deepEqual(print.downloadPrompts, [], 'Lien de téléchargement inutile à l’impression');
                 assert(print.headers.every(display => display === 'table-header-group'));
                 assert(print.rowsAvoidBreak);
                 assert(!print.overflow, 'Débordement horizontal du document imprimable');

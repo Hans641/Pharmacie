@@ -80,6 +80,8 @@ async function inspectPresentation(page, output, stem, print) {
           colorScheme: getComputedStyle(document.documentElement).colorScheme,
           background: getComputedStyle(document.body).backgroundColor,
           controls: [...document.querySelectorAll('.sidebar,.topbar,.page-footer,button,input:not([type="hidden"]),select,textarea')].filter(visible).map(el => el.id || el.name || el.tagName),
+          actionHeaders: [...document.querySelectorAll('th')].filter(el => visible(el) && el.textContent.trim() === 'Actions').length,
+          downloadPrompts: [...document.querySelectorAll('a,strong')].filter(el => visible(el) && /^(Télécharger le PDF|Bon de réception PDF)/.test(el.textContent.trim())).map(el => el.textContent.trim()),
           headers: [...document.querySelectorAll('thead')].map(el => getComputedStyle(el).display),
           rowsAvoidBreak: [...document.querySelectorAll('tbody tr')].every(el => getComputedStyle(el).breakInside === 'avoid'),
           overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
