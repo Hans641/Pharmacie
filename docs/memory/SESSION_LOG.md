@@ -223,3 +223,63 @@ Ajout de run_cashier_benchmark.py/ux_cashier_benchmark.cjs : quinze ventes ficti
 Rapport didge5bc vérifié : 15/15 ventes automatisées OK, quinze paiements uniques, stocks conformes, quinze captures présentes. Médianes : simple 2,126 s, trois produits 4,345 s, ordonnance 2,082 s. Résultats/empreintes et bornes dans RECETTE_CAISSE.md ; aucune preuve de vitesse humaine ni doubles soumissions déduite. Recette complémentaire précédente f2gyt6jp : 112/112 OK.
 
 Utilisateur autorise commit en branche secondaire puis fusion main, sans push. Vérifications syntaxe Node/Python, check Django et diff sans erreur ; pas de nouveau passage complet Django. Tentative de création fix/qa-clavier-chronometrage refusée sur refs .git en lecture seule : aucun commit ni fusion effectué par l’agent. Commandes à exécuter dans le terminal utilisateur. Modèles/vues/services/permissions/migrations inchangés.
+
+## 2 novembre 2026 — Recette des doubles soumissions préparée
+
+Fusion précédente vérifiée sur main à aec1e78, dossier propre avant travail. Extension du lanceur de caisse : --resubmission et nouveau ux_cashier_resubmission.cjs, douze cas (double clic, Entrée répétée, retour × JS/sans JS × 360/1280). Rejeu POST après succès et audit final paiements/mouvements/stock ; aucune modification métier. Tentative ru0zmd5r bloquée à la socket, aucun cas navigateur exécuté. Syntaxe, check Django, diff et douze tests JS caisse validés ; suite Django complète non rejouée. Protocole et limites dans RECETTE_CAISSE.md ; commande hôte --resubmission. Aucun commit/merge/push.
+
+## 2 novembre 2026 — Double soumission : dix succès et deux attentes KO
+
+Rapport t0w3pe_s : 10/12 scénarios OK. Les deux KO Entrée répétée JS expirent en observant disabled avant la répétition ; cause non démontrée. Audit final des douze ventes conforme (paiement unique, mouvement -1, stocks 88/100/100), sans clôturer les deux scénarios. Ajout de diagnostics lockBeforeWait/lockAfterWait et observation par minuterie au lieu du polling rAF pendant la requête retenue ; exigence de désactivation conservée. Syntaxe et diff vérifiés ; commande hôte --resubmission à relancer. Aucun fichier applicatif, commit/merge/push. Détail et empreinte dans RECETTE_CAISSE.md.
+
+## 2 novembre 2026 — Rapport x90n9jdd : attente circulaire du test
+
+Rapport lu : 10/12 OK, deux KO Entrée répétée avec JS. L’erreur précise est désormais `locator.evaluate: Timeout ... waiting for ... navigation to finish`, avant tout relevé lockBeforeWait. Les autres scénarios et dix rejeux passent ; audit des douze ventes toujours conforme, stocks 88/100/100. Les deux cas répétés JS restent non vérifiés.
+
+Cause démontrée pour ce dernier blocage : le test retient le POST jusqu’à observation du bouton, mais Locator.evaluate attend cette navigation retenue. L’hypothèse antérieure d’un simple polling rAF ne suffisait pas à expliquer le nouvel échec. Correction d’outillage : acquérir ElementHandle avant soumission puis évaluer cette référence au document courant, sans résolution de locator attendant la navigation. Attendre la mutation disabled avec MutationObserver et une échéance d’échec de 10 s, sans sleep/polling rAF ; exiger disabled=true, submitting=true et aria-busy=true. Les frappes répétées et assertions de paiement/stock restent inchangées. Aucun correctif applicatif justifié.
+
+Syntaxe Node et diff vérifiés. Nouvelle recette navigateur non exécutée ici (restriction socket) ; relancer `--resubmission` sur l’hôte et examiner lockBeforeWait/lockAfterWait. Aucun commit/merge/push.
+
+Preuve : `/tmp/pharmagest-cashier-report-x90n9jdd/resubmission.json`, SHA-256 : `037e189df84e9a0279638b4151d9211151c49d87955f6e742c34f29d9998a67e`.
+
+## 3 novembre 2026 — mhqs_qyu : expiration globale, pas une réussite
+
+Rapport lu : quatre doubles clics OK, puis blocage dans le premier scénario Entrée répétée JS ; expiration du sous-processus après **600 s**. Le résumé ancien marquait non exécuté malgré ces résultats partiels. Aucun audit final disponible pour ce passage, ne pas le remplacer par celui d’un ancien rapport. L’affichage du dossier seul n’est pas un verdict de réussite.
+
+L’évaluation via ElementHandle n’a pas supprimé le blocage dans le document en navigation ; sa propre échéance JavaScript n’a pas été observée. Nouveau dispositif : installer la sonde MutationObserver AVANT soumission et transmettre les changements à Node via une binding Playwright. Aucun accès DOM déclenché par le test après le POST retenu. Les états sont enregistrés dans lockEvents au fil des mutations ; échéance de dix secondes côté Node, indépendante de l’horloge du document. L’exigence disabled/submitting/aria-busy reste conservée.
+
+Le lanceur distingue désormais timeout/interrompu de non exécuté et conserve la sortie partielle du navigateur en cas d’expiration. Un cas commencé est marqué « en cours », les suivants restent non exécutés. Aucune modification d’application ni de métier. Syntaxe Node/Python et diff contrôlés ; nouvelle recette hôte nécessaire avant toute conclusion. Commande : `--resubmission`. Aucun commit/merge/push.
+
+Preuve partielle : `/tmp/pharmagest-cashier-report-mhqs_qyu/resubmission.json`, SHA-256 `4ee5b1e5252fe7361726684998023af722aaa9e73311744406bcbb58295f6856`.
+
+## 3 novembre 2026 — wbr2hbqe et collision du champ method
+
+Rapport wbr2hbqe : 10 OK/2 KO, mêmes cas Entrée répétée JS, échéance Node atteinte en 10 s. Les sondes ne reçoivent que l’état initial (disabled=false, submitting/busy absents). Les douze ventes ont néanmoins un paiement et un mouvement -1 uniques, stocks 88/100/100 conformes. Aucune protection JS réussie déduite du seul audit serveur.
+
+Lecture du code : checkout contient les radios name=method, tandis que le gestionnaire commun appelle form.method.toLowerCase(). Une propriété de contrôle nommé peut masquer la propriété du formulaire. Nouveau test VM exécutant le vrai app.js avec ce masquage : deux tests échouent AVANT correctif avec TypeError form.method.toLowerCase is not a function ; le test GET/dialog réussit. Correction minimale : lecture de getAttribute('method') au lieu de form.method. APRÈS : **3/3 tests réussis**, dont verrou synchrone, désactivation différée et prévention du second submit. Il s’agit d’une reproduction contrôlée JS, pas encore de la capture de cette exception dans le navigateur réel.
+
+Les anciens changements d’instrumentation corrigeaient les attentes circulaires, pas cette collision. Recette renforcée : collecte pageErrors et type/classe réel de form.method avant soumission, sans en enregistrer les valeurs. Une exception JS produit un KO. Aucun modèle/vue/service/permission/migration modifié. Les tests Node de régression, syntaxes et diff sont vérifiés ; recette navigateur après correctif toujours non exécutée ici (socket refusée). Relancer --resubmission sur l’hôte avant de clore le défaut. Aucun commit/merge/push.
+
+Preuve : `/tmp/pharmagest-cashier-report-wbr2hbqe/resubmission.json`, SHA-256 `d00a21443f2dfbf014c877f6eba772e65dc2c25ae74281978027b67b296adaa5`.
+
+## 3 novembre 2026 — Doubles soumissions closes dans le périmètre testé
+
+Rapport v2a883_n vérifié : 12/12 OK, douze captures, aucun pageErrors, douze ventes/paiements uniques et mouvements -1 uniques, stocks 88/100/100 conformes. Entrée répétée JS : disabled/submitting/busy attestés et une seule requête ; rejeux et retour navigateur passent. form.method est réellement HTMLInputElement (attribut post), confirmant la collision corrigée par getAttribute. Détail/empreinte dans RECETTE_CAISSE.md. Limites concurrence réelle/charge conservées ; prochaines vérifications PDF ReportLab et multipage. Aucun nouveau test applicatif ni commit/merge/push lors de cette analyse.
+
+## 3 novembre 2026 — Lot PDF ReportLab en préparation
+
+ReportLab absent de .venv. Installation de requirements.txt tentée dans un venv propre /tmp/pharmagest-pdf-review-venv : pip ne trouve aucun paquet Django==6.0.4 ; cause réseau/config exacte incertaine, journal /tmp/pharmagest-pdf-install.log. Aucune génération ReportLab ni réussite visuelle revendiquée.
+
+Ajout de tools/run_pdf_review.py : huit documents réels sur base fictive temporaire, trois fixtures longues de 80 lignes, extraction texte/pdfinfo et conversion de chaque page en image ; verdict visuel laissé en attente. Compilation et garde-fou ReportLab absent exécutés. Protocole/commandes environnement propre dans RECETTE_PDF.md. Aucun correctif applicatif ni nouveau test de contenu PDF effectué avant le rapport visuel. Travaux précédents de doubles soumissions préservés. Aucun commit/merge/push.
+
+## 3 novembre 2026 — Lot PDF : vérification réalisée
+
+Installation utilisateur complète dans /tmp/pharmagest-pdf-env-hote confirmée (ReportLab 4.5.1). Rapport avant kdvafnqq : onze PDF/47 pages, défauts visuels de format anglais, alignement/largeurs et page de mention légale seule démontrés. Correctif de présentation uniquement dans pharmacy/pdf.py, tests textuels pharmacy/test_pdf.py, sans vue/modèle/service/migration modifié.
+
+Rapport après ia7_9zpz généré et inspecté par l’agent : onze PDF/23 pages, toutes les images examinées. Huit documents réels tiennent chacun sur une page ; trois fixtures de 80 lignes tiennent chacune sur cinq pages (contre douze), lignes complètes/uniques, en-têtes répétés, montants français alignés et pagination lisible. Détail avant/après et empreintes dans RECETTE_PDF.md.
+
+Deux tests monétaires échouaient avant correction ; les trois tests PDF passent après (0,234 s). Suite complète dans l’environnement propre : **90 tests Django réussis en 157,198 s**, journal /tmp/pharmagest-reportlab-tests.log, base de test détruite. Check Django sans anomalie, makemigrations --check --dry-run sans changement, diff propre. Moteur de secours également exécuté dans .venv sans ReportLab, extraction référence/accent/ligne/montants français vérifiée. Impression physique/thermique, conformité fiscale et balisage accessible PDF non attestés. Aucun commit/merge/push.
+
+## 3 novembre 2026 — Intégration caisse/PDF autorisée
+
+L’utilisateur autorise les commits dans une branche secondaire puis la fusion main, sans push. État contrôlé : main à aec1e78, seuls correctifs/outils/docs attendus modifiés ; aucun diff sur modèles/vues/services/formulaires/migrations. Log de suite complète confirmé : 90 tests réussis (157,198 s), diff sans erreur. Création de fix/recette-caisse-pdf tentée et refusée sur refs .git en lecture seule. Aucun commit ni fusion effectué par l’agent ; commandes fournies pour le terminal utilisateur, sans contournement des droits.

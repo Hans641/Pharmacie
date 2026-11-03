@@ -1285,3 +1285,7 @@ Colonnes Actions et invites de téléchargement masquées sur papier par no-prin
 ## 2 novembre 2026 — Accessibilité complémentaire validée sur l’hôte
 
 Rapport f2gyt6jp inspecté : 112/112 OK, 112 captures, focus actif/contour 3px dans tous les cas ; 1 024 ratios >=4,5 (minimum 5,6320), seize vérifications d’erreurs locales JS, 1 064 HTTP terminés. Deux captures sombres examinées (connexion sans JS 360 et template 500 JS 768). Défaut de contour et faux échec du bouton hidden clos dans le périmètre testé. Zoom réel 200 %, lecteur d’écran, dialogues métier, handlers HTTP réels et liens de réinitialisation restent ouverts. Tableau et empreinte dans RECETTE_PRESENTATION.md. Aucun nouveau test applicatif ni commit/merge/push.
+
+## 3 novembre 2026 — PDF ReportLab et multipage
+
+Lot documenté dans [RECETTE_PDF.md](RECETTE_PDF.md) : onze PDF après correction, 23 pages converties et toutes examinées ; format français, alignement numérique, largeurs et pieds de page corrigés. Trois fixtures de 80 lignes contrôlées sans perte/doublon, en-têtes répétés. Suite complète **90/90 tests Django réussis** avec ReportLab 4.5.1, check et absence de changement de migration vérifiés. Impression physique/fiscalité/balisage PDF non attestés. Aucun commit/merge/push.
