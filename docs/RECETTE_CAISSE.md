@@ -155,3 +155,89 @@ Médiane automatisée simple <30 s : oui. Cela ne démontre pas une vente humain
 Preuve `/tmp/pharmagest-cashier-report-didge5bc/timings.json` ; SHA-256 `61c8272f95d623398e4d3262c4146e7079212a9726360a7a4981cceed9660d7c`.
 
 Preuve `/tmp/pharmagest-cashier-report-didge5bc/summary.json` ; SHA-256 `aaa5e6bf9996446ac93baad4a5e53aedb7446e3ed368dc26292c70f92b8411b0`.
+
+## Doubles activations et retour navigateur — 2 novembre 2026
+
+```bash
+.venv/bin/python tools/run_cashier_benchmark.py --resubmission
+```
+
+Douze ventes sur base/médias temporaires : trois scénarios × JS/sans JS × 360/1280 px. Un produit fictif sans ordonnance, espèces, compte caissier. Ce mode est distinct du chronométrage et ne doit pas modifier ses résultats historiques.
+
+- **Double clic** : deux activations souris au même emplacement. La requête de validation est retenue dans Playwright jusqu’à la fin du geste pour garder le formulaire présent, puis transmise sans modifier le payload.
+- **Entrée répétée** : activation clavier puis deux Entrée supplémentaires pendant la requête retenue. Avec JS, attendre réellement le verrou disabled du bouton, puis exiger une seule requête de validation navigateur.
+- **Retour navigateur** : encaisser, revenir en arrière et relever la page effectivement restaurée. Si c’est la fiche vente, vérifier l’absence de bouton d’encaissement visible ; revenir à la fiche et contrôler la confirmation. Le navigateur peut revenir à la liste selon son historique et le PRG : ce chemin est consigné, pas inventé.
+- **Rejeu serveur** dans chaque cas : renvoyer explicitement le même POST déjà réussi, avec session et CSRF en mémoire, puis recharger la fiche. Ce rejeu doit conserver l’unique paiement, le mouvement de sortie et le stock attendu.
+
+`resubmission.json` conserve cas, erreurs, nombre de requêtes navigateur, statut du rejeu et capture. `summary.json` contrôle l’état validé de chaque vente, un seul paiement, nombre de lignes et mouvements de vente, delta de stock et quantités restantes. Les corps POST et cookies ne sont pas enregistrés. Le compteur navigateur exclut le rejeu API explicitement indiqué par replayStatus.
+
+Limites : les événements sans JS peuvent annuler une requête de navigation précédente avant son arrivée serveur ; cette recette ne prouve pas deux validations réellement simultanées. Le rejeu après succès vérifie l’idempotence séquentielle. Pas de test de charge, de panne réseau réelle, de conflit entre deux caisses ou de toutes les variantes du cache d’historique. Une erreur d’intégrité est un KO même si les captures paraissent correctes.
+
+Tentative locale réellement exécutée : `/tmp/pharmagest-cashier-report-ru0zmd5r`, refus de socket avant navigateur, cas **non exécutés**. Syntaxe Node/Python, check Django, diff et douze tests JS de calcul caisse réussis. Aucun changement de modèle/vue/service/formulaire/migration. Prochaine action : lancer la commande hôte puis analyser les deux JSON et les captures ; aucun succès navigateur attendu transformé en résultat.
+
+## 2 novembre 2026 — Rapport doubles soumissions t0w3pe_s
+
+Rapport lu : **10 OK / 2 KO**. Double clic (quatre cas) et retour navigateur (quatre cas) passent ; Entrée répétée sans JS passe aux deux largeurs, avec deux requêtes navigateur par cas. Dix rejeux après succès retournent 200. Les deux cas Entrée répétée avec JS expirent dans waitForFunction avant les répétitions et le rejeu : ces actions restent non exécutées pour eux.
+
+Audit final indépendant : douze ventes validées, douze paiements uniques, une ligne et un mouvement de vente de -1 par vente ; stocks 88/100/100 conformes. integrity=true. Aucun effet métier doublé observé, mais ne pas transformer cela en douze scénarios réussis.
+
+Le test retenait la navigation et observait disabled via waitForFunction (polling rAF par défaut). Une suspension de ce polling est une hypothèse, **pas une cause démontrée**. Instrumentation ajoutée : disabled/data-submitting/aria-busy avant et après attente. Observation de la même condition sur minuterie (polling 100 ms), sans sleep arbitraire et sans suppression de l’exigence disabled ; assertions submitting=true/busy=true conservées. Aucun code applicatif modifié.
+
+Nouvelle commande : `.venv/bin/python tools/run_cashier_benchmark.py --resubmission`. Attendre le rapport, notamment lockBeforeWait et lockAfterWait, avant de conclure. Syntaxe Node et diff vérifiés. Aucun commit/merge/push, aucune nouvelle suite Django complète pour ce changement d’outillage.
+
+Preuve : `/tmp/pharmagest-cashier-report-t0w3pe_s/resubmission.json` ; SHA-256 : `b3e2ee11d0fb8ec06dd2cc252d505980959bcd4331ea6a92efdff6ed1b7a07f1`.
+
+## 2 novembre 2026 — Rapport x90n9jdd : attente circulaire du test
+
+Rapport lu : 10/12 OK, deux KO Entrée répétée avec JS. L’erreur précise est désormais `locator.evaluate: Timeout ... waiting for ... navigation to finish`, avant tout relevé lockBeforeWait. Les autres scénarios et dix rejeux passent ; audit des douze ventes toujours conforme, stocks 88/100/100. Les deux cas répétés JS restent non vérifiés.
+
+Cause démontrée pour ce dernier blocage : le test retient le POST jusqu’à observation du bouton, mais Locator.evaluate attend cette navigation retenue. L’hypothèse antérieure d’un simple polling rAF ne suffisait pas à expliquer le nouvel échec. Correction d’outillage : acquérir ElementHandle avant soumission puis évaluer cette référence au document courant, sans résolution de locator attendant la navigation. Attendre la mutation disabled avec MutationObserver et une échéance d’échec de 10 s, sans sleep/polling rAF ; exiger disabled=true, submitting=true et aria-busy=true. Les frappes répétées et assertions de paiement/stock restent inchangées. Aucun correctif applicatif justifié.
+
+Syntaxe Node et diff vérifiés. Nouvelle recette navigateur non exécutée ici (restriction socket) ; relancer `--resubmission` sur l’hôte et examiner lockBeforeWait/lockAfterWait. Aucun commit/merge/push.
+
+Preuve : `/tmp/pharmagest-cashier-report-x90n9jdd/resubmission.json`, SHA-256 : `037e189df84e9a0279638b4151d9211151c49d87955f6e742c34f29d9998a67e`.
+
+## 3 novembre 2026 — mhqs_qyu : expiration globale, pas une réussite
+
+Rapport lu : quatre doubles clics OK, puis blocage dans le premier scénario Entrée répétée JS ; expiration du sous-processus après **600 s**. Le résumé ancien marquait non exécuté malgré ces résultats partiels. Aucun audit final disponible pour ce passage, ne pas le remplacer par celui d’un ancien rapport. L’affichage du dossier seul n’est pas un verdict de réussite.
+
+L’évaluation via ElementHandle n’a pas supprimé le blocage dans le document en navigation ; sa propre échéance JavaScript n’a pas été observée. Nouveau dispositif : installer la sonde MutationObserver AVANT soumission et transmettre les changements à Node via une binding Playwright. Aucun accès DOM déclenché par le test après le POST retenu. Les états sont enregistrés dans lockEvents au fil des mutations ; échéance de dix secondes côté Node, indépendante de l’horloge du document. L’exigence disabled/submitting/aria-busy reste conservée.
+
+Le lanceur distingue désormais timeout/interrompu de non exécuté et conserve la sortie partielle du navigateur en cas d’expiration. Un cas commencé est marqué « en cours », les suivants restent non exécutés. Aucune modification d’application ni de métier. Syntaxe Node/Python et diff contrôlés ; nouvelle recette hôte nécessaire avant toute conclusion. Commande : `--resubmission`. Aucun commit/merge/push.
+
+Preuve partielle : `/tmp/pharmagest-cashier-report-mhqs_qyu/resubmission.json`, SHA-256 `4ee5b1e5252fe7361726684998023af722aaa9e73311744406bcbb58295f6856`.
+
+## 3 novembre 2026 — wbr2hbqe et collision du champ method
+
+Rapport wbr2hbqe : 10 OK/2 KO, mêmes cas Entrée répétée JS, échéance Node atteinte en 10 s. Les sondes ne reçoivent que l’état initial (disabled=false, submitting/busy absents). Les douze ventes ont néanmoins un paiement et un mouvement -1 uniques, stocks 88/100/100 conformes. Aucune protection JS réussie déduite du seul audit serveur.
+
+Lecture du code : checkout contient les radios name=method, tandis que le gestionnaire commun appelle form.method.toLowerCase(). Une propriété de contrôle nommé peut masquer la propriété du formulaire. Nouveau test VM exécutant le vrai app.js avec ce masquage : deux tests échouent AVANT correctif avec TypeError form.method.toLowerCase is not a function ; le test GET/dialog réussit. Correction minimale : lecture de getAttribute('method') au lieu de form.method. APRÈS : **3/3 tests réussis**, dont verrou synchrone, désactivation différée et prévention du second submit. Il s’agit d’une reproduction contrôlée JS, pas encore de la capture de cette exception dans le navigateur réel.
+
+Les anciens changements d’instrumentation corrigeaient les attentes circulaires, pas cette collision. Recette renforcée : collecte pageErrors et type/classe réel de form.method avant soumission, sans en enregistrer les valeurs. Une exception JS produit un KO. Aucun modèle/vue/service/permission/migration modifié. Les tests Node de régression, syntaxes et diff sont vérifiés ; recette navigateur après correctif toujours non exécutée ici (socket refusée). Relancer --resubmission sur l’hôte avant de clore le défaut. Aucun commit/merge/push.
+
+Preuve : `/tmp/pharmagest-cashier-report-wbr2hbqe/resubmission.json`, SHA-256 `d00a21443f2dfbf014c877f6eba772e65dc2c25ae74281978027b67b296adaa5`.
+
+## 3 novembre 2026 — Rapport v2a883_n : doubles soumissions validées
+
+Rapport hôte vérifié : **12/12 cas OK**, douze captures présentes, browser_result=OK et integrity=true. Douze ventes validées, un paiement et un mouvement de sortie de -1 chacune, stocks finaux 88/100/100 conformes. Tous les rejeux après succès passent ; aucune exception JS collectée.
+
+| Scénario | JS | Largeur | Résultat | Requêtes navigateur de validation | Rejeu HTTP |
+|---|---|---:|---|---:|---:|
+| double-clic | oui | 360 | OK | 1 | 200 |
+| double-clic | oui | 1280 | OK | 1 | 200 |
+| double-clic | non | 360 | OK | 1 | 200 |
+| double-clic | non | 1280 | OK | 1 | 200 |
+| entree-repetee | oui | 360 | OK | 1 | 200 |
+| entree-repetee | oui | 1280 | OK | 1 | 200 |
+| entree-repetee | non | 360 | OK | 2 | 200 |
+| entree-repetee | non | 1280 | OK | 2 | 200 |
+| retour | oui | 360 | OK | 1 | 200 |
+| retour | oui | 1280 | OK | 1 | 200 |
+| retour | non | 360 | OK | 1 | 200 |
+| retour | non | 1280 | OK | 1 | 200 |
+
+Les deux cas Entrée répétée JS attestent disabled=true, submitting=true et aria-busy=true, puis une seule requête navigateur. La propriété form.method est réellement un objet `[object HTMLInputElement]` dans ce formulaire caissier, tandis que son attribut vaut post : le masquage suspecté est confirmé sur le navigateur. Le correctif getAttribute évite cette collision. Les cas sans JS reposent sur la protection serveur ; les doubles activations ne garantissent pas que deux requêtes aient toujours atteint le serveur simultanément.
+
+Le défaut précis est clos dans ce périmètre. Ce résultat ne constitue pas un test de charge ou une garantie pour toutes les variantes d’historique/concurrence. Aucun nouveau passage complet Django pour cette analyse documentaire. La régression Node précédente est de trois tests réussis après deux échecs reproduits avant correction. Aucun commit, fusion ou push effectué pendant cette vérification.
+
+Preuve : `/tmp/pharmagest-cashier-report-v2a883_n/resubmission.json` ; SHA-256 `db8c2511179591c9aa9af9e6db4c4c7a7b595b5f464ff820d4639f0d05daa3ec`.

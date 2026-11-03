@@ -101,3 +101,19 @@ Réutiliser prepare et le serveur threaded de l’outillage existant pour les es
 ## 2 novembre 2026 — Mesurer les ventes sans confusion de périmètre
 
 Chronométrage Playwright sur base temporaire uniquement ; début à la recherche, fin à confirmation HTML et lien reçu visible, PDF exclu. Conserver temps automatisés et humains séparés, médiane seulement avec cinq réussites, audits des stocks/paiements après exécution. Aucune conclusion de vitesse humaine ni de double soumission à partir de ces seuls parcours nominaux.
+
+## 2 novembre 2026 — Séparer verrou UI et idempotence serveur
+
+Tester les gestes répétés avec la requête retenue dans Playwright, sans sleep, puis rejouer le POST validé et vérifier les paiements/mouvements/quantités dans la base temporaire. Conserver le compteur navigateur et le rejeu explicite distincts. Ne pas présenter une requête annulée côté navigateur comme une double validation arrivée au serveur ni revendiquer une preuve de concurrence.
+
+## 2 novembre 2026 — Observer le document pendant une navigation retenue
+
+Le rapport x90n9jdd démontre que Locator.evaluate attend une navigation retenue par la recette, créant une attente circulaire. Capturer une référence ElementHandle avant soumission pour observer le document initial et sa mutation disabled, avec échéance d’échec. Ne pas modifier l’application ni supprimer la condition de verrouillage pour contourner un défaut du test.
+
+## 3 novembre 2026 — Éviter les propriétés masquées des formulaires
+
+Le champ de paiement name=method peut masquer form.method. Lire l’attribut HTTP avec getAttribute et normaliser sa casse. Régression exécutée sur app.js en VM : deux échecs TypeError avant correctif, trois succès après. Enregistrer les exceptions navigateur et le type réel de la propriété dans la recette pour confirmer le diagnostic sur l’hôte. Préserver les noms métier et les contrôles serveur.
+
+## 3 novembre 2026 — Présentation PDF commune et montants français
+
+Garder les vues et les calculs inchangés ; formater les colonnes dont l’en-tête indique (Ar), les totaux et les montants anglais déjà préformatés des métadonnées dans pharmacy/pdf.py. Choisir des colonnes pondérées à la largeur imprimable, un style numérique aligné à droite et un pied de page commun pour empêcher une page de mention légale seule. Les fixtures longues testent le moteur de mise en page sans se faire passer pour des opérations métier. Contrôler le PDF par extraction textuelle et images, pas seulement sa signature.
