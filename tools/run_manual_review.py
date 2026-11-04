@@ -13,7 +13,7 @@ from ux_review_server import create_server, RequestJournal
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--role', choices=['administrateur', 'pharmacien', 'caissier', 'stock', 'gestion'], default='administrateur')
+    parser.add_argument('--role', choices=['administrateur', 'pharmacien', 'caissier', 'stock', 'gestion', 'all'], default='administrateur')
     args = parser.parse_args()
     if not sys.stdin.isatty():
         parser.error('Lancer dans un terminal interactif : mot de passe temporaire saisi sans affichage.')
@@ -22,7 +22,7 @@ def main():
         parser.error('Mot de passe temporaire trop court.')
     with tempfile.TemporaryDirectory(prefix='pharmagest-manual-data-') as directory:
         cases = prepare(Path(directory), password)
-        case = next(case for case in cases if case['role'] == args.role)
+        selected = [case for case in cases if args.role in ['all', case['role']]]
         from django.contrib.staticfiles.handlers import StaticFilesHandler
         from django.core.wsgi import get_wsgi_application
         output = Path(tempfile.mkdtemp(prefix='pharmagest-manual-report-'))
@@ -34,14 +34,17 @@ def main():
                 base = f'http://127.0.0.1:{server.server_port}'
                 print('Recette isolée, données fictives. Base active et médias actifs non utilisés.')
                 print('Connexion : ' + base + '/comptes/login/')
-                print('Utilisateur : ' + case['username'])
-                print('Mot de passe : celui saisi au démarrage ; aucun mot de passe enregistré dans le rapport.')
-                routes = case['routes'] + ([f'/ventes/{case["sale_id"]}/'] if case['sale_id'] else [])
-                if case['wizard']:
-                    routes.append('/catalogue/medicaments/ajouter/')
-                for route in routes:
-                    print(base + route)
-                print('Protocole : docs/RECETTE_ZOOM_CLAVIER.md')
+                print('IMPORTANT : les comptes ux_* existent uniquement à cette adresse de recette, pas sur le serveur habituel 8000/8001.')
+                print('Un redémarrage change le port et recrée les comptes. Garde ce terminal ouvert ; Entrée arrête le serveur.')
+                print('Mot de passe : celui saisi au démarrage, identique pour les comptes fictifs ; aucun mot de passe journalisé.')
+                for case in selected:
+                    print('Rôle : ' + case['role'] + ' — utilisateur : ' + case['username'])
+                    routes = case['routes'] + ([f'/ventes/{case["sale_id"]}/'] if case['sale_id'] else [])
+                    if case['wizard']:
+                        routes.append('/catalogue/medicaments/ajouter/')
+                    for route in routes:
+                        print(base + route)
+                print('Protocole : docs/RECETTE_ROLES.md' if args.role == 'all' else 'Protocole : docs/RECETTE_ZOOM_CLAVIER.md')
                 print('Rapport local : ' + str(output))
                 input('Laisse ce terminal ouvert pendant les essais. Entrée pour arrêter et nettoyer les données : ')
             finally:

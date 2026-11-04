@@ -18,3 +18,10 @@ backups/
 .publication/
 *.log
 .DS_Store
+
+# Rapports locaux de recette (normalement générés sous /tmp)
+/pharmagest-ux-report-*/
+/pharmagest-manual-report-*/
+/pharmagest-cashier-report-*/
+/pharmagest-pdf-report-*/
+/pharmagest-role-report-*/

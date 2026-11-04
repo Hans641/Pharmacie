@@ -117,3 +117,7 @@ Le champ de paiement name=method peut masquer form.method. Lire l’attribut HTT
 ## 3 novembre 2026 — Présentation PDF commune et montants français
 
 Garder les vues et les calculs inchangés ; formater les colonnes dont l’en-tête indique (Ar), les totaux et les montants anglais déjà préformatés des métadonnées dans pharmacy/pdf.py. Choisir des colonnes pondérées à la largeur imprimable, un style numérique aligné à droite et un pied de page commun pour empêcher une page de mention légale seule. Les fixtures longues testent le moteur de mise en page sans se faire passer pour des opérations métier. Contrôler le PDF par extraction textuelle et images, pas seulement sa signature.
+
+## 4 novembre 2026 — Distinguer parcours HTTP et recette humaine par rôle
+
+Exécuter les enchaînements avec Client(enforce_csrf_checks=True), connexion par route et audit des mutations dans une base temporaire. Conserver ces preuves serveur distinctes des observations visuelles/clavier. Étendre le serveur manuel à --role all, avec comptes standard séparés et protocole de déconnexion entre rôles. Ne pas attribuer une preuve ReportLab à des PDF de secours.

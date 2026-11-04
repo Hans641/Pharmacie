@@ -283,3 +283,31 @@ Deux tests monétaires échouaient avant correction ; les trois tests PDF passen
 ## 3 novembre 2026 — Intégration caisse/PDF autorisée
 
 L’utilisateur autorise les commits dans une branche secondaire puis la fusion main, sans push. État contrôlé : main à aec1e78, seuls correctifs/outils/docs attendus modifiés ; aucun diff sur modèles/vues/services/formulaires/migrations. Log de suite complète confirmé : 90 tests réussis (157,198 s), diff sans erreur. Création de fix/recette-caisse-pdf tentée et refusée sur refs .git en lecture seule. Aucun commit ni fusion effectué par l’agent ; commandes fournies pour le terminal utilisateur, sans contournement des droits.
+
+## 4 novembre 2026 — Parcours finaux par rôle
+
+Reprise Git : main propre à 60a9aea, fusion caisse/PDF confirmée. Nouveau tools/run_role_journeys.py : cinq parcours HTTP authentifiés avec CSRF, neuf refus GET/POST sans mutation et un refus sans CSRF, exclusivement base/médias temporaires. Premier passage 4zyj8bfz : 14/15, assertion de test stock erronée (block attendu au lieu de inventory existant) ; correction de l’outil, aucun changement applicatif. Second rapport p9de2osq : 15/15 OK serveur. PDF servis par le moteur de secours dans cet environnement ; aucune nouvelle preuve ReportLab déduite.
+
+run_manual_review accepte --role all pour tester les cinq comptes dans le même serveur fictif ; protocole dans RECETTE_ROLES.md. Ces parcours navigateur humains sont non exécutés, retour utilisateur attendu. Compilation Python, aide CLI et diff vérifiés ; pas de nouveau passage complet Django pour ces seuls outils/docs. Les preuves historiques 90 tests/23 pages PDF restent datées du lot précédent. Aucun commit/merge/push.
+
+## 4 novembre 2026 — Accès aux comptes de recette à diagnostiquer
+
+L’utilisateur signale un échec de connexion. Dernier journal manuel inspecté : 9587vp_7, serveur annoncé sur 38661, aucune requête de login observée à cet instant ; précédent serveur g_r1uaei/37207 nettoyé. Cela suggère une adresse différente, sans le démontrer tant que l’URL/message utilisateur ne sont pas connus. Aucun diagnostic de mot de passe erroné déduit. Les cinq connexions CSRF du rapport serveur p9de2osq avaient réussi.
+
+Lanceur manuel clarifié : comptes ux_* valables seulement sur son adresse/port, recréés à chaque lancement, terminal à garder ouvert. URL et message d’erreur demandés, aucun mot de passe demandé. Syntaxe et diff contrôlés ; aucune modification applicative, aucun commit/merge/push. Les parcours humains restent non validés.
+
+Diagnostic confirmé par l’URL transmise : tentative sur 127.0.0.1:8000, serveur habituel, tandis que le dernier lanceur manuel annonce 38661. L’utilisateur recevait donc le refus de la base habituelle ; utiliser l’URL de recette annoncée et son mot de passe temporaire. Aucun mot de passe réel ou temporaire consigné. L’accès effectif sur le bon serveur reste à confirmer.
+
+## 4 novembre 2026 — Clôture des parcours par rôle et bilan frontend
+
+Après accès au bon serveur fictif, l’utilisateur confirme les cinq parcours manuels OK. Résultat déclaré, sans version navigateur/dimensions/captures fournies ; tableau RECETTE_ROLES actualisé. BILAN_FRONTEND.md rassemble preuves, défauts corrigés, limites, archive propre et plans des quatre évolutions optionnelles, sans modification de vues ni implémentation.
+
+Contrôles réellement exécutés : suite .venv 90 découverts, 87 exécutés/réussis et 3 ignorés faute de ReportLab (158,595 s), log /tmp/pharmagest-final-frontend-tests.log ; 34 tests JS et 3 tests Python d’outillage (0,241 s) réussis, check sans anomalie, aucune migration détectée. La preuve antérieure 90/90 avec ReportLab reste datée du 3 novembre. .gitignore complété pour les cinq familles de rapports locaux ; chemins .publication/.venv/SQLite/rapports ignorés et non suivis. Diff propre, aucun fichier applicatif modifié pour ce lot. Aucun commit/merge/push.
+
+Restent non mesurés : lecteur d’écran/combinaisons de zoom non attestées, temps humains des ventes, impression physique et certains handlers/reset. Les fonctions optionnelles exigent un périmètre et une autorisation explicites. Le checkpoint est prêt à relire/enregistrer, sans revendiquer une certification globale.
+
+## 4 novembre 2026 — Intégration finale des parcours autorisée
+
+L’utilisateur autorise commit dans une branche dédiée puis fusion main, sans push. État contrôlé : main à 60a9aea, uniquement outils/docs/.gitignore attendus modifiés ; diff propre, fichiers métier protégés sans diff. Résultats de clôture confirmés dans le journal : 87 tests exécutés/réussis, trois PDF ignorés faute de ReportLab, 34 tests JS et trois tests Python d’outillage réussis.
+
+Création de test/recette-finale-roles tentée, refusée sur refs .git en lecture seule. Aucun commit ni fusion effectué par l’agent ; commandes transmises pour le terminal utilisateur, sans contournement des droits.
