@@ -311,3 +311,25 @@ Restent non mesurés : lecteur d’écran/combinaisons de zoom non attestées, t
 L’utilisateur autorise commit dans une branche dédiée puis fusion main, sans push. État contrôlé : main à 60a9aea, uniquement outils/docs/.gitignore attendus modifiés ; diff propre, fichiers métier protégés sans diff. Résultats de clôture confirmés dans le journal : 87 tests exécutés/réussis, trois PDF ignorés faute de ReportLab, 34 tests JS et trois tests Python d’outillage réussis.
 
 Création de test/recette-finale-roles tentée, refusée sur refs .git en lecture seule. Aucun commit ni fusion effectué par l’agent ; commandes transmises pour le terminal utilisateur, sans contournement des droits.
+
+## 4 novembre 2026 — Accessibilité approfondie commencée
+
+Main propre à 2c02668 avant tâche, fusion précédente confirmée. tools/run_semantic_review.py vérifie les rendus HTML et références ARIA sur base temporaire : rapport kx3q74uq, 50/50 OK (45 pages, trois formulaires invalides, deux anonymes). Quatre témoins unitaires positifs/négatifs réussis via tools/test_semantic_review.py ; check Django, compilation et diff valides. Aucun défaut applicatif identifié, aucun changement d’application. Le parseur ne prouve pas l’arbre accessible ni les annonces vocales.
+
+Orca 46.1 détecté ; Firefox snap installé mais lancement/version refusé dans le bac à sable sur XDG_RUNTIME_DIR. Aucun lecteur d’écran ni zoom humain exécuté par l’agent. Protocole à trois scénarios caisse/formulaire/dialogue puis texte seul dans RECETTE_ACCESSIBILITE_APPROFONDIE.md ; attente des observations utilisateur, pas de réussite inventée. Aucun nouveau passage complet Django ni commit/merge/push.
+
+## 4 novembre 2026 — Passage au chronométrage humain
+
+L’utilisateur dit avoir effectué les essais lecteur d’écran et texte seul puis demande le prochain point, sans verdict détaillé. Consigner « essais déclarés effectués, résultat détaillé non transmis », sans transformer ces messages en validation complète. Nouveau point : quinze mesures humaines de caisse (cinq par scénario), conditions et erreurs à relever sur serveur fictif.
+
+Ajout tools/summarize_manual_timings.py : statistiques de durées déclarées, cinq valeurs strictement positives/finies par scénario, source humaine non observée indiquée. Aide/compilation et contrôles de saisie synthétiques exécutés, aucun rapport humain fictif créé. Protocole actualisé dans RECETTE_CAISSE.md ; .gitignore couvre les rapports sémantiques et humains si copiés à la racine. Aucun temps humain réellement transmis, aucun seuil déclaré atteint. Aucun changement applicatif ni commit/merge/push.
+
+## 4 novembre 2026 — Préparation impression physique et commit demandé
+
+L’utilisateur indique les essais humains de caisse OK sans fournir quinze temps : déroulement déclaré satisfaisant, médianes humaines toujours non mesurées. Il demande le point impression puis un commit. Contrôles locaux : CUPS arrêté et aucune destination par défaut (lpstat), anciens PDF/venv temporaires disparus, ReportLab absent de .venv. Aucune impression envoyée ni réussite papier déclarée.
+
+Nouveau protocole RECETTE_IMPRESSION_PHYSIQUE.md : régénération des PDF fictifs, reçu et commande/réception A4, toutes les pages de la fixture longue, limites du thermique A4 versus largeur réelle. Check Django, compilation des trois outils et quatre tests sémantiques réussis, diff sans erreur ; pas de nouveau passage complet Django pour ce lot d’outillage/docs.
+
+Commit demandé pour les outils/protocoles d’accessibilité, statistiques humaines et impression ; ce checkpoint ne clôt pas les observations manuelles non transmises ni l’impression papier. Aucun changement applicatif. Pas de demande de merge ni push pour ce lot.
+
+Création de branche test/recette-manuelle-finale tentée : refus d’écriture des refs .git (lecture seule). Aucun commit effectué par l’agent ; commandes à exécuter depuis le terminal utilisateur. Aucun contournement, fusion ou push.
