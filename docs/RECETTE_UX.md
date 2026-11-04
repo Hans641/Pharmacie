@@ -1289,3 +1289,11 @@ Rapport f2gyt6jp inspecté : 112/112 OK, 112 captures, focus actif/contour 3px d
 ## 3 novembre 2026 — PDF ReportLab et multipage
 
 Lot documenté dans [RECETTE_PDF.md](RECETTE_PDF.md) : onze PDF après correction, 23 pages converties et toutes examinées ; format français, alignement numérique, largeurs et pieds de page corrigés. Trois fixtures de 80 lignes contrôlées sans perte/doublon, en-têtes répétés. Suite complète **90/90 tests Django réussis** avec ReportLab 4.5.1, check et absence de changement de migration vérifiés. Impression physique/fiscalité/balisage PDF non attestés. Aucun commit/merge/push.
+
+## 4 novembre 2026 — Parcours finaux par rôle
+
+15/15 parcours/contrôles HTTP et base réussis avec CSRF, rapport p9de2osq ; observations humaines de bout en bout encore non exécutées. Protocole et limites : [RECETTE_ROLES.md](RECETTE_ROLES.md). Serveur fictif multi-comptes : `.venv/bin/python tools/run_manual_review.py --role all`. Aucun changement applicatif pour cette préparation.
+
+## 4 novembre 2026 — Consolidation finale
+
+Cinq parcours manuels déclarés OK par l’utilisateur, en complément des 15 contrôles HTTP. Nouveau [BILAN_FRONTEND.md](BILAN_FRONTEND.md) : preuves, limites et suites possibles. Dernière suite .venv : 87 tests exécutés/réussis, 3 PDF ignorés faute de ReportLab ; historique 90/90 avec ReportLab conservé. 34 tests JS et trois tests d’outillage Python réussis ; check et migrations sans anomalie. Aucun commit/merge/push.
