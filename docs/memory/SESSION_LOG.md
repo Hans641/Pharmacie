@@ -333,3 +333,7 @@ Nouveau protocole RECETTE_IMPRESSION_PHYSIQUE.md : régénération des PDF ficti
 Commit demandé pour les outils/protocoles d’accessibilité, statistiques humaines et impression ; ce checkpoint ne clôt pas les observations manuelles non transmises ni l’impression papier. Aucun changement applicatif. Pas de demande de merge ni push pour ce lot.
 
 Création de branche test/recette-manuelle-finale tentée : refus d’écriture des refs .git (lecture seule). Aucun commit effectué par l’agent ; commandes à exécuter depuis le terminal utilisateur. Aucun contournement, fusion ou push.
+
+## 4 novembre 2026 — Préparation de la démonstration complète
+
+Demande explicite de nettoyage/enrichissement et d’accès pour tous les rôles. Inspection : huit médicaments, deux fournisseurs, un client et seul demo_admin. Sauvegarde privée avant remplacement ; préparation séparée puis copie SQLite dans la base habituelle, compte initial préservé. Jeu obtenu : 30 médicaments/11 catégories, six fournisseurs, 12 clients, 32 lots, 12 achats/14 réceptions, 38 ventes/36 paiements, trois retours. Transactions par services existants, exemples de stock faible/rupture/périmé/bloqué, FEFO et ordonnance ; historique fictif daté. Cinq connexions et permissions sensibles, intégrité SQL, montants des paiements et soldes de tous les lots contrôlés avant copie. Guide DEMONSTRATION.md ; aucun secret consigné dans Git ou cette mémoire. Aucun changement applicatif, commit, merge ou push.

@@ -125,3 +125,7 @@ Exécuter les enchaînements avec Client(enforce_csrf_checks=True), connexion pa
 ## 4 novembre 2026 — Ne pas assimiler HTML et lecture vocale
 
 Auditer références ARIA, IDs et noms HTML avec un parseur testé sur témoins négatifs, sans dépendance supplémentaire. Ce contrôle étroit complète les matrices mais ne remplace ni le moteur de nom accessible ni un lecteur d’écran. Préparer les scénarios Orca sur serveur fictif et consigner les annonces humaines avant de corriger les composants.
+
+## 4 novembre 2026 — Enrichissement local de la démonstration
+
+Construire une base séparée avec les migrations existantes et les services métier, vérifier les invariants puis copier avec SQLite backup après sauvegarde de l’ancienne base. Préserver le compte antérieur, créer cinq comptes à groupes distincts sans superutilisateur ; mots de passe aléatoires uniquement dans un fichier local privé ignoré. Limiter le catalogue à 30 fiches et couvrir les états métier plutôt que multiplier les lignes. Aucun générateur destructif permanent ajouté.
