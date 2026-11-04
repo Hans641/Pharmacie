@@ -121,3 +121,7 @@ Garder les vues et les calculs inchangés ; formater les colonnes dont l’en-t�
 ## 4 novembre 2026 — Distinguer parcours HTTP et recette humaine par rôle
 
 Exécuter les enchaînements avec Client(enforce_csrf_checks=True), connexion par route et audit des mutations dans une base temporaire. Conserver ces preuves serveur distinctes des observations visuelles/clavier. Étendre le serveur manuel à --role all, avec comptes standard séparés et protocole de déconnexion entre rôles. Ne pas attribuer une preuve ReportLab à des PDF de secours.
+
+## 4 novembre 2026 — Ne pas assimiler HTML et lecture vocale
+
+Auditer références ARIA, IDs et noms HTML avec un parseur testé sur témoins négatifs, sans dépendance supplémentaire. Ce contrôle étroit complète les matrices mais ne remplace ni le moteur de nom accessible ni un lecteur d’écran. Préparer les scénarios Orca sur serveur fictif et consigner les annonces humaines avant de corriger les composants.

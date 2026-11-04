@@ -1297,3 +1297,11 @@ Lot documenté dans [RECETTE_PDF.md](RECETTE_PDF.md) : onze PDF après correctio
 ## 4 novembre 2026 — Consolidation finale
 
 Cinq parcours manuels déclarés OK par l’utilisateur, en complément des 15 contrôles HTTP. Nouveau [BILAN_FRONTEND.md](BILAN_FRONTEND.md) : preuves, limites et suites possibles. Dernière suite .venv : 87 tests exécutés/réussis, 3 PDF ignorés faute de ReportLab ; historique 90/90 avec ReportLab conservé. 34 tests JS et trois tests d’outillage Python réussis ; check et migrations sans anomalie. Aucun commit/merge/push.
+
+## 4 novembre 2026 — Accessibilité approfondie
+
+50/50 rendus HTML passent les contrôles ciblés IDs/ARIA/noms ; quatre tests de l’outil réussis. Lecture vocale et texte agrandi restent non exécutés. Protocole : [RECETTE_ACCESSIBILITE_APPROFONDIE.md](RECETTE_ACCESSIBILITE_APPROFONDIE.md). Aucun score WCAG global revendiqué.
+
+## 4 novembre 2026 — Préparation impression réelle
+
+Protocole : [RECETTE_IMPRESSION_PHYSIQUE.md](RECETTE_IMPRESSION_PHYSIQUE.md). CUPS arrêté, aucune imprimante par défaut ; aucune sortie papier exécutée. Essais humains indiqués satisfaisants sans quinze temps transmis : objectif humain <30 s non mesuré. Le commit des protocoles ne vaut pas validation de ces points.

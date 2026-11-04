@@ -241,3 +241,35 @@ Les deux cas Entrée répétée JS attestent disabled=true, submitting=true et a
 Le défaut précis est clos dans ce périmètre. Ce résultat ne constitue pas un test de charge ou une garantie pour toutes les variantes d’historique/concurrence. Aucun nouveau passage complet Django pour cette analyse documentaire. La régression Node précédente est de trois tests réussis après deux échecs reproduits avant correction. Aucun commit, fusion ou push effectué pendant cette vérification.
 
 Preuve : `/tmp/pharmagest-cashier-report-v2a883_n/resubmission.json` ; SHA-256 `db8c2511179591c9aa9af9e6db4c4c7a7b595b5f464ff820d4639f0d05daa3ec`.
+
+## 4 novembre 2026 — Collecte des temps humains
+
+Lancer ou conserver le serveur fictif ; si un nouveau lancement est nécessaire :
+
+```bash
+.venv/bin/python tools/run_manual_review.py --role caissier
+```
+
+Utiliser ux_caissier et le mot de passe choisi sur le port annoncé. Commencer chaque passage par **une nouvelle vente comptoir vide**, pas par le brouillon prérempli affiché par la préparation. Ce test crée de vraies mutations dans la seule base temporaire ; ne pas le faire sur le serveur habituel.
+
+Même machine/navigateur, même largeur/thème, même saisie clavier pour les quinze passages. Noter ces conditions et le moyen de recherche (nom ou code-barres). Garder assez de stock fictif disponible, ne pas employer un lot bloqué/périmé. Les scénarios sont ceux décrits plus haut :
+
+- Simple : une unité d’un produit autorisé sans ordonnance, en stock.
+- Trois produits : une unité de trois produits distincts, dont au moins un lot sous 90 jours, en stock.
+- Ordonnance : une unité d’un produit exigeant une ordonnance, avec contrôle simulé d’une ordonnance fictive.
+
+Chronométrer du début de la recherche jusqu’à la confirmation « Vente encaissée » et au lien reçu disponible. Connexion/ouverture du brouillon et téléchargement/impression PDF exclus. Utiliser espèces avec montant reçu connu ; effectuer les contrôles et confirmations sans les sauter pour accélérer. Répéter cinq fois par scénario. Relever les erreurs, hésitations et retours arrière ; une vente échouée n’est pas une durée de vente réussie et ne doit pas être remplacée silencieusement.
+
+Retour attendu (secondes, séparateur point ou virgule accepté) :
+
+```text
+Navigateur/version, largeur, thème, recherche utilisée : ...
+Simple : ... ; ... ; ... ; ... ; ...
+Trois produits : ... ; ... ; ... ; ... ; ...
+Ordonnance : ... ; ... ; ... ; ... ; ...
+Erreurs/retours arrière : ...
+```
+
+Le script tools/summarize_manual_timings.py calcule les statistiques à partir des quinze valeurs réellement transmises. Il ne chronomètre pas le navigateur et indique explicitement la source déclarative. Aide : `.venv/bin/python tools/summarize_manual_timings.py --help`. Il exige cinq durées positives/finies par scénario et des conditions de mesure ; sortie dans /tmp/pharmagest-human-timing-report-*. Aucune valeur d’exemple ne doit être présentée comme un temps observé.
+
+Aide/compilation et validation de saisies exécutées sur valeurs synthétiques (virgule, médiane, refus nombre de valeurs incorrect/zéro/NaN/infini/texte), sans créer de faux rapport humain. **Temps humains non exécutés/non transmis à ce stade**. Le seuil porte sur la médiane simple <30 s ; si ce seuil n’est pas atteint, relever les trois plus gros freins observés avant de proposer une correction.
